@@ -125,7 +125,7 @@ class TestBrain(Test):
         test(self.brain1, 1, 1, 0) # Same node
 
     def test_dist_to_prev_used(self):
-        test = lambda brain, prev, res: self.assert_float(brain.dist_to_prev_used(0, 5, prev), res)
+        test = lambda brain, prev, res: self.assert_float(brain.dist_to_prev_used(5, prev), res)
         test(self.brain1,    [], 0)        # No fail on empty
         test(self.brain1, [0,2], 3855)     # Choose closest
         test(self.brain1, [0,2,6], 3855)   # Added further apart node
