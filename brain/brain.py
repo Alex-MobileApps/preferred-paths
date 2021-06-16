@@ -195,7 +195,7 @@ class Brain():
       """
 
       M = self.sc if weighted else self.sc_bin
-      return M.sum(axis=0)
+      return M.sum(axis=1)
 
    def node_strength_disimilarity(self, weighted=True):
       """
@@ -285,16 +285,6 @@ class Brain():
       """
 
       validate_square(M)
-      validate_symmetric(M)
       M_wei = M.copy()
       np.fill_diagonal(M_wei, 0)
       return M_wei
-
-   @staticmethod
-   def _get_node_str(M):
-      """
-      Returns the sum of edge weights adjacent to each node
-      M : adjacency matrix
-      """
-
-      return M.sum(axis=0)

@@ -40,9 +40,6 @@ class TestBrain(Test):
         self.assert_raise(True, lambda: Brain(self.sc1, non_square, self.euc_dist, 1, 1)) # Non square
         self.assert_raise(True, lambda: Brain(non_square, self.fc1, self.euc_dist, 1, 1))
         self.assert_raise(True, lambda: Brain(self.sc1, self.fc1, non_square, 1, 1))
-        self.assert_raise(True, lambda: Brain(directed, small, small, 1, 1))              # Directed
-        self.assert_raise(True, lambda: Brain(small, directed, small, 1, 1))
-        self.assert_raise(True, lambda: Brain(small, small, directed, 1, 1))
         self.assert_raise(True, lambda: Brain(self.sc1, small, self.euc_dist, 1, 1))      # Resolution mismatch
         self.assert_raise(True, lambda: Brain(small, self.fc1, self.euc_dist, 1, 1))
         self.assert_raise(True, lambda: Brain(self.sc1, self.fc1, small, 1, 1))

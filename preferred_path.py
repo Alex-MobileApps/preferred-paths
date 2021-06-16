@@ -38,7 +38,6 @@ class PreferredPath():
 
         if validate:
             validate_square(adj)
-            validate_symmetric(adj)
             validate_binary(adj)
             validate_loopless(adj)
             if self._num_fns != len(fn_weights):
@@ -70,10 +69,11 @@ class PreferredPath():
         """
 
         fn = self._convert_method_to_fn(method)
-        M = PreferredPath._path_list(self._res)
-        for source in range(self._res - 1):
-            for target in range(source + 1, self._res):
-                M[source][target] = fn(source, target)
+        M = self._path_dict(self._res)
+        for source in range(self._res):
+            for target in range(self._res):
+                if source != target:
+                    M[source][target] = fn(source, target)
         return M
 
     def retrieve_single_path(self, source, target, method=_DEF_METHOD):
@@ -125,7 +125,7 @@ class PreferredPath():
         remaining = np.full(self._res, True)
         while loc != target:
             remaining[loc] = False
-            next_loc = self._next_loc_fn(loc, prev, remaining)
+            next_loc = self._next_loc_fn(source, target, loc, prev, remaining)
             if next_loc is None:
                 return None
             prev.append(loc)
@@ -154,7 +154,7 @@ class PreferredPath():
         prev = []
         remaining = np.full(self._res, True)
         while loc != target:
-            next_loc = self._next_loc_fn(loc, prev, remaining)
+            next_loc = self._next_loc_fn(source, target, loc, prev, remaining)
             if next_loc is None or next_loc in prev:
                 return None
             prev.append(loc)
@@ -184,7 +184,7 @@ class PreferredPath():
         remaining = np.full(self._res, True)
         while loc != target:
             remaining[loc] = False
-            next_loc = self._next_loc_fn(loc, prev, remaining)
+            next_loc = self._next_loc_fn(source, target, loc, prev, remaining)
             if next_loc is not None: prev.append(loc)
             elif prev: next_loc = prev.pop() # Backtrack here
             else: return None # Nowhere to backtrack (graph is disconnected)
@@ -192,12 +192,16 @@ class PreferredPath():
         prev.append(loc)
         return prev
 
-    def _next_loc_fn(self, loc, prev, remaining):
+    def _next_loc_fn(self, source, target, loc, prev, remaining):
         """
         Returns the next location (node) in a preferred path
 
         Parameters
         ----------
+        source : int
+            Source node
+        target : int
+            Target node
         loc : int
             Current location
         prev : list
@@ -211,14 +215,17 @@ class PreferredPath():
             Next location
         """
 
-        targets = np.argwhere((remaining == True) & (self._adj[loc] == 1)).ravel()
-        if targets.size == 0:
+        candidates = np.argwhere((remaining == True) & (self._adj[loc] == 1)).ravel()
+        if candidates.size == 0:
             return None
-        total_scores = self._get_total_scores(loc, targets, prev)
-        candidates = targets[np.argwhere(total_scores == total_scores.max()).ravel()]
-        return np.random.choice(candidates)
+        total_scores = self._get_total_scores(loc, candidates, prev)
+        best_cand = candidates[np.argwhere(total_scores == total_scores.max()).ravel()]
+        choice = np.random.choice(best_cand)
+        if len(best_cand) > 1:
+            print(f"Warning - Path {source}-{target} at node {loc}: Multiple candidate nodes found. Randomly selecting node {choice} from {best_cand} (previous: {prev})")
+        return choice
 
-    def _get_total_scores(self, loc, targets, prev):
+    def _get_total_scores(self, loc, candidates, prev):
         """
         Returns the overall scores for nodes as the next location in a preferred path
 
@@ -226,21 +233,21 @@ class PreferredPath():
         ----------
         loc : int
             Current location
-        targets : numpy.ndarray
+        candidates : numpy.ndarray
             Nodes that can be selected as the next location
         prev : list
             Path sequence so far (excluding 'loc')
         """
 
-        num_targets = len(targets)
-        total_scores = np.zeros(num_targets)
+        num_cand = len(candidates)
+        total_scores = np.zeros(num_cand)
         for i in range(self._num_fns):
-            temp_score = PreferredPath._get_temp_scores(self._fn_vector[i], num_targets, loc, targets, prev)
+            temp_score = PreferredPath._get_temp_scores(self._fn_vector[i], num_cand, loc, candidates, prev)
             total_scores += self._fn_weights[i] * temp_score
         return total_scores
 
     @staticmethod
-    def _get_temp_scores(fn, num_targets, loc, targets, prev):
+    def _get_temp_scores(fn, num_cand, loc, candidates, prev):
         """
         Returns the single function score for nodes as the next location in a preferred path
 
@@ -248,11 +255,11 @@ class PreferredPath():
         ----------
         fn : function
             Function used to compute a node score, with parameters - source: int, target: int, prev: list
-        num_targets : int
+        num_cand : int
             Number of nodes to choose from for the next location
         loc : int
             Current location
-        targets : numpy.ndarray
+        candidates : numpy.ndarray
             Nodes that can be selected as the next location
         prev : list
             Path sequence so far (excluding 'loc')
@@ -263,9 +270,9 @@ class PreferredPath():
             Vector of node scores for a single function
         """
 
-        scores = np.zeros(num_targets)
-        for i in range(num_targets):
-            scores[i] = fn(loc, targets[i], prev)
+        scores = np.zeros(num_cand)
+        for i in range(num_cand):
+            scores[i] = fn(loc, candidates[i], prev)
         score_max = scores.max()
         return scores / score_max if score_max != 0 else scores
 
@@ -292,9 +299,9 @@ class PreferredPath():
         else: raise ValueError("Invalid method")
 
     @staticmethod
-    def _path_list(n):
+    def _path_dict(n):
         """
-        Returns a dictionary with two layers of keys for each source and target node
+        Returns a two-layered dictionary with keys for each source node and empty dictionaries as values
 
         Parameters
         ----------
@@ -304,12 +311,10 @@ class PreferredPath():
         Returns
         -------
         out : dict
-            Dictionary with keys for each source and target node
+            Two-layered dictionary
         """
 
-        M = dict()
-        for i in range(n - 1):
-            M[i] = dict()
-        for i, j in combinations(range(n), 2):
-            M[i][j] = None
+        M = {}
+        for i in range(n):
+            M[i] = {}
         return M

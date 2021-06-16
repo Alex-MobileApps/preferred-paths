@@ -34,7 +34,6 @@ class TestPaths(Test):
         test(np.array([[0,0]]), False)   # No validation
         test(np.array([[0,0]]))          # Non-square
         test(np.array([[0,0]]))          # Non-square
-        test(np.array([[0,0],[1,0]]))    # Directed
         test(np.array([[0,2],[2,0]]))    # Non-binary
         test(np.array([[1,1],[1,0]]))    # Non-loopless
         test = lambda fn_vector, fn_weights, r=True: self.assert_raise(r, lambda: PreferredPath(np.array([[0]]), fn_vector, fn_weights, validate=r))
@@ -45,39 +44,41 @@ class TestPaths(Test):
     def test_retrieve_all_paths(self):
         fn = self.pp1.retrieve_all_paths
         self.assert_raise(True, lambda: fn('a')) # Invalid method
-        test = lambda method, res: self.assertDictEqual(fn(method), res)
+        test = lambda method, res: self.assertDictEqual({key: val for key, val in fn(method).items() if key != 6}, res) # 6 selects at random, tested in individual tests
 
         # Forward
         res_fwd = {
             0: {1: [0,1], 2: [0,1,5,3,6,2], 3: [0,1,5,3], 4: None, 5: [0,1,5], 6: [0,1,5,3,6], 7: None},
-            1: {2: [1,5,3,6,2], 3: [1,5,3], 4: None, 5: [1,5], 6: [1,5,3,6], 7: None},
-            2: {3: None, 4: None, 5: [2,5], 6: None, 7: None},
-            3: {4: None, 5: [3,5], 6: [3,5,1,2,6], 7: None},
-            4: {5: [4,5], 6: [4,5,1,2,6], 7: None},
-            5: {6: [5,1,2,6], 7: None},
-            6: {7: None}}
-        test('fwd', res_fwd)
+            1: {0: None, 2: [1,5,3,6,2], 3: [1,5,3], 4: None, 5: [1,5], 6: [1,5,3,6], 7: None},
+            2: {0: [2,5,1,0], 1: [2,5,1], 3: None, 4: None, 5: [2,5], 6: None, 7: None},
+            3: {0: None, 1: [3,5,1], 2: [3,5,1,2], 4: None, 5: [3,5], 6: [3,5,1,2,6], 7: None},
+            4: {0: None, 1: [4,5,1], 2: [4,5,1,2], 3: [4,5,1,2,6,3], 5: [4,5], 6: [4,5,1,2,6], 7: None},
+            5: {0: None, 1: [5,1], 2: [5,1,2], 3: [5,1,2,6,3], 4: [5,1,2,6,3,4], 6: [5,1,2,6], 7: None},
+            7: {0: None, 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}}
+            # 6 selects at random: Covered in individual tests
 
         # Revisits
         res_rev = {
             0: {1: [0,1], 2: None, 3: None, 4: None, 5: [0,1,5], 6: None, 7: None},
-            1: {2: None, 3: None, 4: None, 5: [1,5], 6: None, 7: None},
-            2: {3: None, 4: None, 5: [2,5], 6: None, 7: None},
-            3: {4: None, 5: [3,5], 6: None, 7: None},
-            4: {5: [4,5], 6: None, 7: None},
-            5: {6: None, 7: None},
-            6: {7: None}}
+            1: {0: None, 2: None, 3: None, 4: None, 5: [1,5], 6: None, 7: None},
+            2: {0: None, 1: [2,5,1], 3: None, 4: None, 5: [2,5], 6: None, 7: None},
+            3: {0: None, 1: [3,5,1], 2: None, 4: None, 5: [3,5], 6: None, 7: None},
+            4: {0: None, 1: [4,5,1], 2: None, 3: None, 5: [4,5], 6: None, 7: None},
+            5: {0: None, 1: [5,1], 2: None, 3: None, 4: None, 6: None, 7: None},
+            7: {0: None, 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}}
+            # 6 selects at random: Covered in individual tests
         test('rev', res_rev)
 
         # Backtrack
         res_back = {
             0: {1: [0,1], 2: [0,1,5,3,6,2], 3: [0,1,5,3], 4: [0,1,5,3,4], 5: [0,1,5], 6: [0,1,5,3,6], 7: None},
-            1: {2: [1,5,3,6,2], 3: [1,5,3], 4: [1,5,3,4], 5: [1,5], 6: [1,5,3,6], 7: None},
-            2: {3: [2,5,3], 4: [2,5,3,4], 5: [2,5], 6: [2,5,3,6], 7: None},
-            3: {4: [3,5,4], 5: [3,5], 6: [3,5,1,2,6], 7: None},
-            4: {5: [4,5], 6: [4,5,1,2,6], 7: None},
-            5: {6: [5,1,2,6], 7: None},
-            6: {7: None}}
+            1: {0: [1,0], 2: [1,5,3,6,2], 3: [1,5,3], 4: [1,5,3,4], 5: [1,5], 6: [1,5,3,6], 7: None},
+            2: {0: [2,5,1,0], 1:[2,5,1], 3: [2,5,3], 4: [2,5,3,4], 5: [2,5], 6: [2,5,3,6], 7: None},
+            3: {0: [3,5,1,0], 1: [3,5,1], 2: [3,5,1,2], 4: [3,5,4], 5: [3,5], 6: [3,5,1,2,6], 7: None},
+            4: {0: [4,5,1,0], 1:[4,5,1], 2: [4,5,1,2], 3: [4,5,1,2,6,3], 5: [4,5], 6: [4,5,1,2,6], 7: None},
+            5: {0: [5,1,0], 1: [5,1], 2: [5,1,2], 3: [5,1,2,6,3], 4: [5,1,2,6,3,4], 6: [5,1,2,6], 7: None},
+            7: {0: None, 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}}
+            # 6 selects at random: Covered in individual tests
         test('back', res_back)
 
     def test_retrieve_single_path(self):
@@ -121,7 +122,7 @@ class TestPaths(Test):
     def test_next_loc_fn(self):
         # No remaining candidates
         remaining = np.full(self.pp1._res, False)
-        test = lambda loc, res, prev: np.testing.assert_equal(self.pp1._next_loc_fn(loc, prev, remaining), res)
+        test = lambda loc, res, prev: np.testing.assert_equal(self.pp1._next_loc_fn(0, 5, loc, prev, remaining), res)
         test(0, None, [])
 
         # Revists allowed
@@ -131,7 +132,7 @@ class TestPaths(Test):
         # test random choices
         res = [False, False]
         for _ in range(20):
-            temp = self.pp1._next_loc_fn(6, [], remaining)
+            temp = self.pp1._next_loc_fn(6, 0, 6, [], remaining)
             if temp == 2: res[0] = True
             elif temp == 3: res[1] = True
             else: self.fail("Random choice needs to be 2 or 3")
@@ -182,17 +183,11 @@ class TestPaths(Test):
         self.assertEqual(self.pp1._convert_method_to_fn('back'), self.pp1._back)
         self.assert_raise(True, lambda: self.pp1._convert_method_to_fn('a'))
 
-    def test_path_list(self):
-        expected3 = {
-            0:{1:None,2:None},
-            1:{2:None}}
-        expected5 = {
-            0:{1:None,2:None,3:None,4:None},
-            1:{2:None,3:None,4:None},
-            2:{3:None,4:None},
-            3:{4:None}}
-        self.assertDictEqual(PreferredPath._path_list(3), expected3)
-        self.assertDictEqual(PreferredPath._path_list(5), expected5)
+    def test_path_dict(self):
+        expected3 = {0:{},1:{},2:{}}
+        expected5 = {0:{},1:{},2:{},3:{},4:{}}
+        self.assertDictEqual(PreferredPath._path_dict(3), expected3)
+        self.assertDictEqual(PreferredPath._path_dict(5), expected5)
 
 if __name__ == '__main__':
     TestPaths.main()
