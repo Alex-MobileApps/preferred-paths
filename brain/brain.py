@@ -1,5 +1,5 @@
 import numpy as np
-from utils import binarise_matrix, validate_square, validate_thresh_type, validate_symmetric
+from utils import binarise_matrix, validate_square, validate_thresh_type
 from math import pi, acos
 
 class Brain():

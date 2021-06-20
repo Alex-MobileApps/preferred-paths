@@ -1,7 +1,6 @@
 import numpy as np
-from itertools import combinations
 
-from utils import validate_binary, validate_loopless, validate_square, validate_symmetric
+from utils import validate_binary, validate_loopless, validate_square
 
 class PreferredPath():
 
