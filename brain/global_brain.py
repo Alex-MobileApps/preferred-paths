@@ -6,8 +6,8 @@ class GlobalBrain(Brain):
 
    # Constructor
 
-   def __init__(self, sc, fc, euc_dist, sc_thresh, fc_thresh, sc_thresh_type=Brain._DEF_THRESH_TYPE, fc_thresh_type=Brain._DEF_THRESH_TYPE):
-      super().__init__(sc, fc, euc_dist, sc_thresh, fc_thresh, sc_thresh_type, fc_thresh_type)
+   def __init__(self, sc, fc, euc_dist, sc_directed=Brain._DEF_SC_DIR, sc_thresh=Brain._DEF_SC_THRESH, fc_thresh=Brain._DEF_FC_THRESH, sc_thresh_type=Brain._DEF_THRESH_TYPE, fc_thresh_type=Brain._DEF_THRESH_TYPE):
+      super().__init__(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=sc_directed, sc_thresh=sc_thresh, fc_thresh=fc_thresh, sc_thresh_type=sc_thresh_type, fc_thresh_type=fc_thresh_type)
 
 
    # Measures

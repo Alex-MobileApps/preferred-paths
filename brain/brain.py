@@ -7,11 +7,14 @@ class Brain():
    # Static variables
 
    _DEF_THRESH_TYPE = 'pos'
+   _DEF_SC_THRESH = 1
+   _DEF_FC_THRESH = 0.01
+   _DEF_SC_DIR = True
 
 
    # Constructor
 
-   def __init__(self, sc, fc, euc_dist, sc_thresh, fc_thresh, sc_thresh_type=_DEF_THRESH_TYPE, fc_thresh_type=_DEF_THRESH_TYPE):
+   def __init__(self, sc, fc, euc_dist, sc_directed=_DEF_SC_DIR, sc_thresh=_DEF_SC_THRESH, fc_thresh=_DEF_FC_THRESH, sc_thresh_type=_DEF_THRESH_TYPE, fc_thresh_type=_DEF_THRESH_TYPE):
       """
       Contains weighted and binarised connectome matrices of a brain, as well as functions that compute features of these connectomes
 
@@ -23,6 +26,8 @@ class Brain():
          Weighted functional connectivity matrix
       euc_dist : numpy.ndarray
          Euclidean distances between each node pair
+      sc_directed : bool
+         Whether or not the SC layer is a directed graph or not
       sc_thresh, fc_thresh : float
          Threshold used to binarise SC and FC
       sc_thresh_type, fc_thresh_type : str
@@ -45,6 +50,7 @@ class Brain():
          raise ValueError("Conflicting network resolutions")
       self._sc_bin = Brain._get_bin_matrix(self._sc, self._sc_thresh, self._sc_thresh_type)
       self._fc_bin = Brain._get_bin_matrix(self._fc, self._fc_thresh, self._fc_thresh_type)
+      self._sc_directed = sc_directed
 
 
    # Properties
@@ -76,6 +82,13 @@ class Brain():
       Get the threshold type used to create the binarised SC matrix
       """
       return self._sc_thresh_type
+
+   @property
+   def sc_directed(self):
+      """
+      Get whether or not the SC layer is a directed graph or not
+      """
+      return self._sc_directed
 
    @property
    def fc(self):
@@ -197,7 +210,7 @@ class Brain():
       M = self.sc if weighted else self.sc_bin
       return M.sum(axis=1)
 
-   def node_strength_disimilarity(self, weighted=True):
+   def node_strength_dissimilarity(self, weighted=True):
       """
       Returns the magnitude of the difference in the sum of edge weights of any pair of nodes
 
@@ -209,7 +222,7 @@ class Brain():
       Returns
       -------
       out : numpy.ndarray
-         Matrix of node strength disimilarity
+         Matrix of node strength dissimilarity
       """
 
       M = self.node_strength(weighted)
@@ -225,7 +238,8 @@ class Brain():
          Vector of SC-FC triangle node prevalances
       """
 
-      return (self.sc_bin @ (self.fc_bin * (1 - self.sc_bin)) @ self.sc_bin).diagonal() / 2
+      T = (self.sc_bin @ (self.fc_bin * (1 - self.sc_bin)) @ self.sc_bin).diagonal()
+      return T if self._sc_directed else T / 2
 
    def triangle_edge_prevalence(self):
       """

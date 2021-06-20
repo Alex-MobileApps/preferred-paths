@@ -25,8 +25,8 @@ class TestBrain(Test):
         cls.fc_thresh_type1 = 'pos'
         cls.fc_thresh_type2 = 'abs'
         cls.res = 20
-        cls.brain1 = Brain(cls.sc1, cls.fc1, cls.euc_dist, cls.sc_thresh1, cls.fc_thresh1)
-        cls.brain2 = Brain(cls.sc2, cls.fc2, cls.euc_dist, cls.sc_thresh2, cls.fc_thresh2, cls.sc_thresh_type2, cls.fc_thresh_type2)
+        cls.brain1 = Brain(sc=cls.sc1, fc=cls.fc1, euc_dist=cls.euc_dist, sc_directed=False, sc_thresh=cls.sc_thresh1, fc_thresh=cls.fc_thresh1)
+        cls.brain2 = Brain(sc=cls.sc2, fc=cls.fc2, euc_dist=cls.euc_dist, sc_directed=False, sc_thresh=cls.sc_thresh2, fc_thresh=cls.fc_thresh2, sc_thresh_type=cls.sc_thresh_type2, fc_thresh_type=cls.fc_thresh_type2)
 
     def test_init(self):
         # Failed brains
@@ -101,8 +101,8 @@ class TestBrain(Test):
         test(self.brain2, 2489.74, True)
         test(self.brain1, 15, False)
 
-    def test_node_strength_disimilarity(self):
-        test = lambda brain, res, weighted=True: self.assert_float(brain.node_strength_disimilarity(weighted)[3,5], res)
+    def test_node_strength_dissimilarity(self):
+        test = lambda brain, res, weighted=True: self.assert_float(brain.node_strength_dissimilarity(weighted)[3,5], res)
         test(self.brain1, 4431.02)
         test(self.brain1, 4431.02, True)
         test(self.brain2, 1864.87)
