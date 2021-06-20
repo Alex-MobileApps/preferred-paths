@@ -180,8 +180,6 @@ pp = PreferredPath(adj=brain.sc_bin, fn_vector=fn_vector, fn_weights=fn_weights)
 ```
 
 <img src="img/sc_wei.png">
-<br/>
-<br/>
 
 ### Navigation algorithms
 - **Revisits**: Previously visited nodes can be selected as the next location (fails on revisit cycles, dead-ends and disconnected graphs)
