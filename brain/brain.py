@@ -192,7 +192,7 @@ class Brain():
       cosc = (a ** 2 + b ** 2 - c ** 2) / (2 * a * b)
       return pi - acos(cosc)
 
-   def node_strength(self, weighted=True):
+   def node_strength(self, weighted=True, method='tot'):
       """
       Returns the sum of edge weights adjacent to a node
 
@@ -200,6 +200,11 @@ class Brain():
       ----------
       weighted : bool
          Whether to use the weighted or unweighted SC matrix
+      method : str
+         Used if weighted=True
+         - 'in'  : in-degree strengths only
+         - 'out' : out-degree strengths only
+         - 'tot' : combined in and out degree strengths
 
       Returns
       -------
@@ -208,9 +213,16 @@ class Brain():
       """
 
       M = self.sc if weighted else self.sc_bin
-      return M.sum(axis=1)
+      if not self.sc_directed or method == 'out':
+         return M.sum(axis=1)
+      elif method == 'tot':
+         return M.sum(axis=0) + M.sum(axis=1)
+      elif method == 'in':
+         return M.sum(axis=0)
+      else:
+         raise ValueError("Invalid method")
 
-   def node_strength_dissimilarity(self, weighted=True):
+   def node_strength_dissimilarity(self, weighted=True, method='tot'):
       """
       Returns the magnitude of the difference in the sum of edge weights of any pair of nodes
 
@@ -218,6 +230,11 @@ class Brain():
       ----------
       weighted : bool
          Whether to use the weighted or unweighted SC matrix
+      method : str
+         Used if weighted=True
+         - 'in'  : in-degree strengths only
+         - 'out' : out-degree strengths only
+         - 'tot' : combined in and out degree strengths
 
       Returns
       -------
@@ -225,7 +242,7 @@ class Brain():
          Matrix of node strength dissimilarity
       """
 
-      M = self.node_strength(weighted)
+      M = self.node_strength(weighted, method)
       return abs(M.reshape(-1,1) - M.T)
 
    def triangle_node_prevalence(self):
@@ -238,7 +255,7 @@ class Brain():
          Vector of SC-FC triangle node prevalances
       """
 
-      T = (self.sc_bin @ (self.fc_bin * (1 - self.sc_bin)) @ self.sc_bin).diagonal()
+      T = (self.sc_bin @ (self.fc_bin * (1 - self.sc_bin.T)) @ self.sc_bin).diagonal()
       return T if self._sc_directed else T / 2
 
    def triangle_edge_prevalence(self):
@@ -248,11 +265,12 @@ class Brain():
       Returns
       -------
       out : numpy.ndarray
-         Matrix of edge prevelances in SC-FC triangles
+         Matrix of edge prevalances in SC-FC triangles
       """
 
       A = self.fc_bin * (1 - self.sc_bin)
-      return self.sc_bin * (A @ self.sc_bin + self.sc_bin @ A)
+      sc_T = self.sc_bin.T
+      return self.sc_bin * (A @ sc_T + sc_T @ A)
 
    def dist_to_prev_used(self, target, prev):
       """
@@ -274,6 +292,25 @@ class Brain():
       if not prev:
          return 0
       return self.euc_dist[target][prev].min()
+
+   def target_adjacent(self, source, target):
+      """
+      Returns whether or node the target node is adjacent to the current node
+
+      Parameters
+      ----------
+      source : int
+         Current path location
+      target : int
+         Final destination node
+
+      Returns
+      -------
+      out : int
+         Whether or not the target node is adjacent to the current node (1 if true, 0 otherwise)
+      """
+
+      return self.sc_bin[source, target] > 0
 
 
    # Internal

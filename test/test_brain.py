@@ -5,129 +5,145 @@ from brain import Brain
 import numpy as np
 from utils import binarise_matrix
 from test.test import Test
+from math import pi
 
 class TestBrain(Test):
 
-    @classmethod
-    def setUp(cls):
-        load = lambda txt: np.loadtxt(f'test/test_{txt}.txt', delimiter=',')
-        cls.sc1 = load('sc1')
-        cls.sc2 = load('sc2')
-        cls.fc1 = load('fc1')
-        cls.fc2 = load('fc2')
-        cls.euc_dist = load('euc_dist')
-        cls.sc_thresh1 = 1
-        cls.sc_thresh2 = 5
-        cls.fc_thresh1 = 0.01
-        cls.fc_thresh2 = 0.1
-        cls.sc_thresh_type1 = 'pos'
-        cls.sc_thresh_type2 = 'neg'
-        cls.fc_thresh_type1 = 'pos'
-        cls.fc_thresh_type2 = 'abs'
-        cls.res = 20
-        cls.brain1 = Brain(sc=cls.sc1, fc=cls.fc1, euc_dist=cls.euc_dist, sc_directed=False, sc_thresh=cls.sc_thresh1, fc_thresh=cls.fc_thresh1)
-        cls.brain2 = Brain(sc=cls.sc2, fc=cls.fc2, euc_dist=cls.euc_dist, sc_directed=False, sc_thresh=cls.sc_thresh2, fc_thresh=cls.fc_thresh2, sc_thresh_type=cls.sc_thresh_type2, fc_thresh_type=cls.fc_thresh_type2)
-
     def test_init(self):
+        # Sample Graphs
+        sc = np.array([[9,-3,4],[-2,-9,2],[1,0,0]])
+        fc = -sc
+        euc_dist = 2 * sc
+
         # Failed brains
         non_square = np.array([[0,1]])
-        directed = np.array([[0,1],[2,0]])
         non_np = [[0,1],[1,0]]
         small = np.array(non_np)
-        self.assert_raise(True, lambda: Brain(self.sc1, non_np, self.euc_dist, 1, 1))     # Non numpy
-        self.assert_raise(True, lambda: Brain(non_np, self.fc1, self.euc_dist, 1, 1))
-        self.assert_raise(True, lambda: Brain(self.sc1, self.fc1, non_np, 1, 1))
-        self.assert_raise(True, lambda: Brain(self.sc1, non_square, self.euc_dist, 1, 1)) # Non square
-        self.assert_raise(True, lambda: Brain(non_square, self.fc1, self.euc_dist, 1, 1))
-        self.assert_raise(True, lambda: Brain(self.sc1, self.fc1, non_square, 1, 1))
-        self.assert_raise(True, lambda: Brain(self.sc1, small, self.euc_dist, 1, 1))      # Resolution mismatch
-        self.assert_raise(True, lambda: Brain(small, self.fc1, self.euc_dist, 1, 1))
-        self.assert_raise(True, lambda: Brain(self.sc1, self.fc1, small, 1, 1))
+        self.assert_raise(True, lambda: Brain(sc,         non_np,     euc_dist, 1, 1))      # Non numpy
+        self.assert_raise(True, lambda: Brain(non_np,     fc,         euc_dist, 1, 1))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         non_np, 1, 1))
+        self.assert_raise(True, lambda: Brain(sc,         non_square, euc_dist, 1, 1))      # Non square
+        self.assert_raise(True, lambda: Brain(non_square, fc,         euc_dist, 1, 1))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         non_square, 1, 1))
+        self.assert_raise(True, lambda: Brain(sc,         small,      euc_dist, 1, 1))      # Resolution mismatch
+        self.assert_raise(True, lambda: Brain(small,      fc,         euc_dist, 1, 1))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         small, 1, 1))
 
-        loopless = lambda M: M * (1 - np.eye(self.res))
+        # Brain
+        loopless = lambda M: M * (1 - np.eye(len(M)))
         test_wei = lambda a, b: self.assert_float(a, loopless(b))
         test_bin = lambda a, b, c, d: self.assert_float(a, loopless(binarise_matrix(b, c, d)))
-
-        # Brain 1
-        np.testing.assert_equal(self.brain1.sc_thresh, self.sc_thresh1)
-        np.testing.assert_equal(self.brain1.fc_thresh, self.fc_thresh1)
-        np.testing.assert_equal(self.brain1.sc_thresh_type, self.sc_thresh_type1)
-        np.testing.assert_equal(self.brain1.fc_thresh_type, self.fc_thresh_type1)
-        np.testing.assert_equal(self.brain1.res, self.res)
-        test_wei(self.brain1.sc, self.sc1)
-        test_wei(self.brain1.fc, self.fc1)
-        test_wei(self.brain1.euc_dist, self.euc_dist)
-        test_bin(self.brain1.sc_bin, self.sc1, self.sc_thresh1, self.sc_thresh_type1)
-        test_bin(self.brain1.fc_bin, self.fc1, self.fc_thresh1, self.fc_thresh_type1)
-
-        # Brain 2
-        np.testing.assert_equal(self.brain2.sc_thresh, self.sc_thresh2)
-        np.testing.assert_equal(self.brain2.fc_thresh, self.fc_thresh2)
-        np.testing.assert_equal(self.brain2.sc_thresh_type, self.sc_thresh_type2)
-        np.testing.assert_equal(self.brain2.fc_thresh_type, self.fc_thresh_type2)
-        np.testing.assert_equal(self.brain2.res, self.res)
-        test_wei(self.brain2.sc, self.sc2)
-        test_wei(self.brain2.fc, self.fc2)
-        test_wei(self.brain2.euc_dist, self.euc_dist)
-        test_bin(self.brain2.sc_bin, self.sc2, self.sc_thresh2, self.sc_thresh_type2)
-        test_bin(self.brain2.fc_bin, self.fc2, self.fc_thresh2, self.fc_thresh_type2)
+        brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=False)
+        np.testing.assert_equal(brain.sc_directed, False)
+        brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=2, fc_thresh=-2, sc_thresh_type='pos', fc_thresh_type='neg')
+        test_wei(brain.sc, sc)
+        test_wei(brain.fc, fc)
+        test_wei(brain.euc_dist, euc_dist)
+        test_bin(brain.sc_bin, sc,  2, 'pos')
+        test_bin(brain.fc_bin, fc, -2, 'neg')
+        np.testing.assert_equal(brain.sc_directed, True)
+        np.testing.assert_equal(brain.sc_thresh, 2)
+        np.testing.assert_equal(brain.fc_thresh, -2)
+        np.testing.assert_equal(brain.sc_thresh_type, 'pos')
+        np.testing.assert_equal(brain.fc_thresh_type, 'neg')
+        np.testing.assert_equal(brain.res, 3)
 
     def test_streamlines(self):
-        test = lambda brain, res, weighted=True: self.assert_float(brain.streamlines(weighted), res)
-        test(self.brain1, self.sc1)
-        test(self.brain2, self.sc2)
-        test(self.brain1, self.sc1, True)
-        test(self.brain2, self.sc2, True)
-        test(self.brain1, (self.sc1 >= 1).astype(np.float), False)
+        M = np.array([[0,5],[0.5,0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M)
+        test = lambda brain, weighted, exp: self.assert_float(brain.streamlines(weighted), exp)
+        test(brain, True, M)
+        test(brain, False, M >= 1)
 
     def test_edge_length(self):
-        test = lambda brain, res: self.assert_float(brain.edge_length(), res)
-        test(self.brain1, self.euc_dist)
-        test(self.brain2, self.euc_dist)
+        M = np.array([[0,3,5],[3,0,4],[5,4,0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M)
+        self.assert_float(brain.edge_length(), M)
 
     def test_edge_angle_change(self):
-        test = lambda brain, source, target, prev, res: self.assert_float(brain.edge_angle_change(source, target, prev), res)
-        test(self.brain1, 0, 1, [], 0)       # No previous
-        test(self.brain1, 0, 0, [1], 0)      # Same source/destination
-        test(self.brain1, 0, 1, [2], 1.91)
-        test(self.brain1, 0, 1, [3,2], 1.91) # Longer path
-        test(self.brain1, 6, 7, [8], 2.58)   # New value
+        M = np.array([[0,1,2],[1,0,np.sqrt(3)],[2,np.sqrt(3),0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M)
+        test = lambda brain, source, target, prev, exp: self.assert_float(brain.edge_angle_change(source, target, prev), exp)
+        test(brain, 0, 0, [], 0)            # No previous
+        test(brain, 1, 1, [0], 0)           # Same source/target
+        test(brain, 0, 1, [2], 2*pi/3)
+        test(brain, 1, 2, [0], pi/2)
+        test(brain, 1, 2, [2], pi)          # U-turn
+        test(brain, 0, 1, [1,2], 2*pi/3)    # Multi prev
 
     def test_node_strength(self):
-        test = lambda brain, res, weighted=True: self.assert_float(brain.node_strength(weighted)[3], res)
-        test(self.brain1, 2336.94)
-        test(self.brain1, 2336.94, True)
-        test(self.brain2, 2489.74)
-        test(self.brain2, 2489.74, True)
-        test(self.brain1, 15, False)
+        M = np.array([[0,4,3,0],[5,0,0.5,0],[0,0,0,0],[0,0,0,0]])
+        brain_dir = Brain(sc=M, fc=M, euc_dist=M, sc_directed=True)
+        test = lambda brain, weighted, method, exp: self.assert_float(brain.node_strength(weighted, method), exp)
+        test(brain_dir,  True, 'tot', np.array([12,9.5,3.5,0]))
+        test(brain_dir,  True,  'in', np.array([5,4,3.5,0]))
+        test(brain_dir,  True, 'out', np.array([7,5.5,0,0]))
+        test(brain_dir, False, 'tot', np.array([3,2,1,0]))
+        test(brain_dir, False,  'in', np.array([1,1,1,0]))
+        test(brain_dir, False, 'out', np.array([2,1,0,0]))
+        M = np.array([[0,5,4,0],[5,0,0,0.5],[4,0,0,0],[0,0.5,0,0]])
+        brain_und = Brain(sc=M, fc=M, euc_dist=M, sc_directed=False)
+        for method in ['tot','in','out']:
+            test(brain_und,  True, method, np.array([9,5.5,4,0.5]))
+            test(brain_und, False, method, np.array([2,1,1,0]))
 
     def test_node_strength_dissimilarity(self):
-        test = lambda brain, res, weighted=True: self.assert_float(brain.node_strength_dissimilarity(weighted)[3,5], res)
-        test(self.brain1, 4431.02)
-        test(self.brain1, 4431.02, True)
-        test(self.brain2, 1864.87)
-        test(self.brain2, 1864.87, True)
-        test(self.brain1, 2, False)
+        M = np.array([[0,4,3,0],[5,0,0.5,0],[0,0,0,0],[0,0,0,0]])
+        brain_dir = Brain(sc=M, fc=M, euc_dist=M, sc_directed=True)
+        test = lambda brain, weighted, method, exp: self.assert_float(brain.node_strength_dissimilarity(weighted, method), exp)
+        test(brain_dir,  True, 'tot', np.array([[0,2.5,8.5,12],[2.5,0,6,9.5],[8.5,6,0,3.5],[12,9.5,3.5,0]]))
+        test(brain_dir,  True,  'in', np.array([[0,1,1.5,5],[1,0,0.5,4],[1.5,0.5,0,3.5],[5,4,3.5,0]]))
+        test(brain_dir,  True, 'out', np.array([[0,1.5,7,7],[1.5,0,5.5,5.5],[7,5.5,0,0],[7,5.5,0,0]]))
+        test(brain_dir,  False, 'tot', np.array([[0,1,2,3],[1,0,1,2],[2,1,0,1],[3,2,1,0]]))
+        test(brain_dir,  False, 'in', np.array([[0,0,0,1],[0,0,0,1],[0,0,0,1],[1,1,1,0]]))
+        test(brain_dir,  False, 'out', np.array([[0,1,2,2],[1,0,1,1],[2,1,0,0],[2,1,0,0]]))
+        M = np.array([[0,5,4,0],[5,0,0,0.5],[4,0,0,0],[0,0.5,0,0]])
+        brain_und = Brain(sc=M, fc=M, euc_dist=M, sc_directed=False)
+        for method in ['tot','in','out']:
+            test(brain_und,  True, method, np.array([[0,3.5,5,8.5],[3.5,0,1.5,5],[5,1.5,0,3.5],[8.5,5,3.5,0]]))
+            test(brain_und, False, method, np.array([[0,1,1,2],[1,0,0,1],[1,0,0,1],[2,1,1,0]]))
 
     def test_triangle_node_prevalence(self):
-        test = lambda brain, res: self.assert_float(brain.triangle_node_prevalence()[5], res)
-        test(self.brain1, 2)
-        test(self.brain2, 4)
+        sc = np.array([[0,0,3,0,0],[0,0,0,0,0],[4,5,0,2,0],[0,6,7,0,8],[0.5,0,0,1,0]])
+        fc = np.array([[0,1,0,3,0],[1,0,0,4,0.5],[0,0,0,0,5],[3,4,0,0,0],[0,0.5,5,0,0]])
+        brain = Brain(sc=sc, fc=fc, euc_dist=sc, sc_directed=True, fc_thresh=1)
+        self.assert_float(brain.triangle_node_prevalence(), np.array([0,0,3,2,0]))
+        sc = np.array([[0,1,2,3,4],[1,0,0.5,0,5],[2,0.5,0,0,0],[3,0,0,0,6],[4,5,0,6,0]])
+        fc = np.array([[0,0,0,1,0],[0,0,0,2,0],[0,0,0,0.5,3],[1,2,0.5,0,4],[0,0,3,4,0]])
+        brain = Brain(sc=sc, fc=fc, euc_dist=sc, sc_directed=False, fc_thresh=1)
+        self.assert_float(brain.triangle_node_prevalence(), np.array([2,0,0,0,1]))
 
     def test_triangle_edge_prevalence(self):
-        test = lambda brain, source, target, res: self.assert_float(brain.triangle_edge_prevalence()[source, target], res)
-        test(self.brain1, 2, 18, 2) # 2-0-18, 2-7-18
-        test(self.brain1, 0, 5, 1)  # 0-18-5
-        test(self.brain1, 0, 3, 0)
-        test(self.brain1, 1, 1, 0) # Same node
+        sc = np.array([[0,0,3,0,0],[0,0,0,0,0],[4,5,0,2,0],[0,6,7,0,8],[0.5,0,0,1,0]])
+        fc = np.array([[0,1,0,3,0],[1,0,0,4,0.5],[0,0,0,0,5],[3,4,0,0,0],[0,0.5,5,0,0]])
+        brain = Brain(sc=sc, fc=fc, euc_dist=sc, sc_directed=True, fc_thresh=1)
+        self.assert_float(brain.triangle_edge_prevalence(), np.array([[0,0,2,0,0],[0,0,0,0,0],[1,1,0,2,0],[0,0,2,0,1],[0,0,0,1,0]]))
+        sc = np.array([[0,1,2,3,4],[1,0,0.5,0,5],[2,0.5,0,0,0],[3,0,0,0,6],[4,5,0,6,0]])
+        fc = np.array([[0,0,0,1,0],[0,0,0,2,0],[0,0,0,0.5,3],[1,2,0.5,0,4],[0,0,3,4,0]])
+        brain = Brain(sc=sc, fc=fc, euc_dist=sc, sc_directed=False, fc_thresh=1)
+        self.assert_float(brain.triangle_edge_prevalence(), np.array([[0,1,1,1,1],[1,0,0,0,1],[1,0,0,0,0],[1,0,0,0,1],[1,1,0,1,0]]))
 
     def test_dist_to_prev_used(self):
-        test = lambda brain, prev, res: self.assert_float(brain.dist_to_prev_used(5, prev), res)
-        test(self.brain1,    [], 0)        # No fail on empty
-        test(self.brain1, [0,2], 3855)     # Choose closest
-        test(self.brain1, [0,2,6], 3855)   # Added further apart node
-        test(self.brain1, [0,2,6,3], 3761) # Added closer node
-        test(self.brain1, [0,3,2,6], 3761) # Change order
+        M = np.array([[0,4,3,5],[4,0,5,3],[3,5,0,4],[5,3,4,0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M)
+        test = lambda brain, target, prev, exp: self.assert_float(brain.dist_to_prev_used(target, prev), exp)
+        test(brain, 0, [], 0)       # No fail on empty
+        test(brain, 0, [0,1], 0)    # Target in prev
+        test(brain, 1, [0,3], 3)    # Choose closest
+        test(brain, 1, [3,0], 3)    # Change order
+        test(brain, 2, [1,3], 4)
+        test(brain, 2, [0,1,3], 3)
+        test(brain, 1, [0,2,3], 3)
+
+    def test_target_adjacent(self):
+        M = np.array([[0,1,2],[3,0,0],[0,0,0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M)
+        test = lambda brain, source, target, exp: self.assertEqual(brain.target_adjacent(source, target), exp)
+        test(brain, 0, 0, False) # No self edge
+        test(brain, 0, 2, True)
+        test(brain, 2, 0, False)
+        test(brain, 1, 0, True)
+        test(brain, 0, 1, True)
 
 if __name__ == '__main__':
     TestBrain.main()
