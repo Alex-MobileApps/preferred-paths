@@ -124,6 +124,26 @@ class TestBrain(Test):
         brain = Brain(sc=sc, fc=fc, euc_dist=sc, sc_directed=False, fc_thresh=1)
         self.assert_float(brain.triangle_edge_prevalence(), np.array([[0,1,1,1,1],[1,0,0,0,1],[1,0,0,0,0],[1,0,0,0,1],[1,1,0,1,0]]))
 
+    def test_hops_to_prev_used(self):
+        M = np.array([[0,1,0,0,0],[2,0,3,0,0],[0,0,0,4,0],[0,6,0,0,0],[0,0,0,0,0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M, sc_directed=True)
+        test = lambda brain, target, prev, exp: self.assert_float(brain.hops_to_prev_used(target, prev), exp)
+        test(brain, 0, [], 0)       # No prev
+        test(brain, 0, [0], 0)      # Self
+        test(brain, 4, [0], inf)    # Disconnected
+        test(brain, 0, [2], 3)
+        test(brain, 0, [2,3], 2)
+        test(brain, 0, [3,2], 2)
+        test(brain, 3, [0], 3)
+        test(brain, 3, [0,2], 1)
+        M = np.array([[0,1,0,0,0],[1,0,1,0,0],[0,1,0,1,0],[0,0,1,0,0],[0,0,0,0,0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M, sc_directed=False)
+        test(brain, 0, [], 0)       # No prev
+        test(brain, 0, [0], 0)      # Self
+        test(brain, 4, [0], inf)    # Disconnected
+        test(brain, 0, [2,3], 2)
+        test(brain, 2, [0,3], 1)
+
     def test_dist_to_prev_used(self):
         M = np.array([[0,4,3,5],[4,0,5,3],[3,5,0,4],[5,3,4,0]])
         brain = Brain(sc=M, fc=M, euc_dist=M)

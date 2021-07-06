@@ -156,6 +156,22 @@ print(brain.triangle_edge_prevalence())
 #  [0 0 0 0 0 0 0 0]]
 ```
 
+### Hops to previously used nodes
+The smallest number of hops from all previously visited nodes to another node
+```
+print(brain.hops_to_prev_used(target=4, prev=[0,1]))
+
+# 2.0
+```
+
+### Distance to previously used nodes
+The smallest Euclidean distance of all previously visited nodes to another node
+```
+print(brain.dist_to_prev_used(target=4, prev=[0,1]))
+
+# 26
+```
+
 ### Target adjacent
 Whether or not the target node is adjacent to the current node
 ```

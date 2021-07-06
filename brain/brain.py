@@ -52,6 +52,7 @@ class Brain():
       self._sc_bin = Brain._get_bin_matrix(self._sc, self._sc_thresh, self._sc_thresh_type)
       self._fc_bin = Brain._get_bin_matrix(self._fc, self._fc_thresh, self._fc_thresh_type)
       self._sc_directed = sc_directed
+      self._sp_hops = None
 
 
    # Properties
@@ -273,6 +274,28 @@ class Brain():
       sc_T = self.sc_bin.T
       return self.sc_bin * (A @ sc_T + sc_T @ A)
 
+   def hops_to_prev_used(self, target, prev):
+      """
+      Returns the lowest number of hops from any previously visited nodes to the target node
+      (i.e. shortest path from previous nodes to target node)
+
+      Parameters
+      ----------
+      target : int
+         Target node
+      prev : list
+         Path sequence (containing previously visited nodes)
+
+      Returns
+      -------
+      out : int
+         Fewest number of hops to a previously used node
+      """
+
+      if not prev:
+         return 0
+      return self.shortest_paths(method='hops')[:,target][prev].min()
+
    def dist_to_prev_used(self, target, prev):
       """
       Returns the Euclidean distance of the target node to the closest previously visited node
@@ -322,7 +345,7 @@ class Brain():
       method : str
          Determines how the shortest paths are calculated
          - 'hops' : binary / fewest hops
-         - 'dist' : sum of distance travelled
+         - 'dist' : sum of edge distances
 
       Returns
       -------
@@ -330,12 +353,14 @@ class Brain():
          Matrix of shortest path lengths
       """
 
-      if method not in ['hops','dist']:
+      if method == 'hops':
+         if self._sp_hops is None:
+            self._sp_hops = dijkstra(self.sc_bin, directed=self.sc_directed, unweighted=True)
+         return self._sp_hops
+      elif method == 'dist':
+         return dijkstra(self.sc_bin * self.euc_dist, directed=self.sc_directed, unweighted=False)
+      else:
          raise ValueError("Invalid method")
-
-      M = self.sc_bin * self.euc_dist
-      unweighted = method == 'hops'
-      return dijkstra(M, directed=self.sc_directed, unweighted=unweighted)
 
 
    # Internal
