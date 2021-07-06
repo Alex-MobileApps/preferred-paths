@@ -103,16 +103,24 @@ print(brain.edge_angle_change(source=1, target=2, prev=[0]))
 ### Node strength
 Number of streamlines attached to each node
 ```
-print(brain.node_strength(weighted=True))
+print(brain.node_strength(weighted=True, method='in'))
+
+# [ 0 18 12 13  5 19 14  0]
+
+print(brain.node_strength(weighted=True, method='out'))
 
 # [ 5 13 12 15  3 19 14  0]
+
+print(brain.node_strength(weighted=True, method='tot'))
+
+# [ 5 31 24 28  8 38 28  0]
 ```
 
 ### Node strength dissimilarity
 The magnitude of difference of the number of streamlines attached to each source and target nodes
 
 ```
-print(brain.node_strength_dissimilarity(weighted=True))
+print(brain.node_strength_dissimilarity(weighted=True, method='out'))
 
 # [[ 0  8  7 10  2 14  9  5]
 #  [ 8  0  1  2 10  6  1 13]
@@ -138,13 +146,25 @@ The number of SC-FC triangles that involve each edge
 print(brain.triangle_edge_prevalence())
 
 # [[0 1 0 0 0 0 0 0]
-#  [0 0 0 0 0 0 0 0]
-#  [0 1 0 0 0 1 1 0]
+#  [0 0 1 0 0 0 0 0]
+#  [0 0 0 0 0 1 1 0]
 #  [0 0 0 0 0 1 1 0]
 #  [0 0 0 0 0 1 0 0]
 #  [0 0 1 2 0 0 0 0]
 #  [0 0 1 1 0 0 0 0]
 #  [0 0 0 0 0 0 0 0]]
+```
+
+### Target adjacent
+Whether or not the target node is adjacent to the current node
+```
+print(brain.target_adjacent(source=0, target=1))
+
+# True
+
+print(brain.target_adjacent(source=0, target=2))
+
+# False
 ```
 
 ## Preferred paths
