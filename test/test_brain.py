@@ -6,6 +6,7 @@ import numpy as np
 from utils import binarise_matrix
 from test.test import Test
 from math import pi
+from numpy import inf
 
 class TestBrain(Test):
 
@@ -144,6 +145,16 @@ class TestBrain(Test):
         test(brain, 2, 0, False)
         test(brain, 1, 0, True)
         test(brain, 0, 1, True)
+
+    def test_shortest_paths(self):
+        M = np.array([[0,2,0,0,0],[0,0,8,3,0],[1,9,0,4,0],[0,0,4,0,0],[0,0,0,0,0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M*2, sc_directed=True)
+        self.assert_float(brain.shortest_paths('hops'), np.array([[0,1,2,2,inf],[2,0,1,1,inf],[1,1,0,1,inf],[2,2,1,0,inf],[inf,inf,inf,inf,0]]))
+        self.assert_float(brain.shortest_paths('dist'), np.array([[0,4,18,10,inf],[16,0,14,6,inf],[2,6,0,8,inf],[10,14,8,0,inf],[inf,inf,inf,inf,0]]))
+        M = np.array([[0,2,1,0,0],[2,0,9,0,0],[1,9,0,4,0],[0,0,4,0,0],[0,0,0,0,0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M*2, sc_directed=False)
+        self.assert_float(brain.shortest_paths('hops'), np.array([[0,1,1,2,inf],[1,0,1,2,inf],[1,1,0,1,inf],[2,2,1,0,inf],[inf,inf,inf,inf,0]]))
+        self.assert_float(brain.shortest_paths('dist'), np.array([[0,4,2,10,inf],[4,0,6,14,inf],[2,6,0,8,inf],[10,14,8,0,inf],[inf,inf,inf,inf,0]]))
 
 if __name__ == '__main__':
     TestBrain.main()

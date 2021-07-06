@@ -8,6 +8,7 @@ Requires installation of:
 
 - python 3
 - numpy
+- scipy
 
 ## Setup
 
@@ -165,6 +166,21 @@ print(brain.target_adjacent(source=0, target=1))
 print(brain.target_adjacent(source=0, target=2))
 
 # False
+```
+
+### Shortest paths
+Lengths of the shortest paths between nodes
+```
+print(brain.shortest_paths(method='hops'))
+
+# [[ 0.  1.  2.  3.  3.  2.  3. inf]
+#  [inf  0.  1.  2.  2.  1.  2. inf]
+#  [inf  1.  0.  2.  2.  1.  1. inf]
+#  [inf  2.  2.  0.  1.  1.  1. inf]
+#  [inf  2.  2.  2.  0.  1.  3. inf]
+#  [inf  1.  1.  1.  1.  0.  2. inf]
+#  [inf  2.  1.  1.  2.  2.  0. inf]
+#  [inf inf inf inf inf inf inf  0.]]
 ```
 
 ## Preferred paths

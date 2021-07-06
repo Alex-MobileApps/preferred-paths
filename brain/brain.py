@@ -1,6 +1,7 @@
 import numpy as np
 from utils import binarise_matrix, validate_square, validate_thresh_type
 from math import pi, acos
+from scipy.sparse.csgraph import dijkstra
 
 class Brain():
 
@@ -311,6 +312,30 @@ class Brain():
       """
 
       return self.sc_bin[source, target] > 0
+
+   def shortest_paths(self, method='hops'):
+      """
+      Returns the shortest path lengths between any two nodes
+
+      Parameters
+      ----------
+      method : str
+         Determines how the shortest paths are calculated
+         - 'hops' : binary / fewest hops
+         - 'dist' : sum of distance travelled
+
+      Returns
+      -------
+      out : numpy.ndarray
+         Matrix of shortest path lengths
+      """
+
+      if method not in ['hops','dist']:
+         raise ValueError("Invalid method")
+
+      M = self.sc_bin * self.euc_dist
+      unweighted = method == 'hops'
+      return dijkstra(M, directed=self.sc_directed, unweighted=unweighted)
 
 
    # Internal
