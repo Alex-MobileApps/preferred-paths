@@ -10,7 +10,7 @@ class Brain():
    _DEF_THRESH_TYPE = 'pos'
    _DEF_SC_THRESH = 1
    _DEF_FC_THRESH = 0.01
-   _DEF_SC_DIR = True
+   _DEF_SC_DIR = False
 
 
    # Constructor
