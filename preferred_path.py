@@ -7,6 +7,7 @@ class PreferredPath():
     # Static variables
 
     _DEF_METHOD = 'fwd'
+    _DEF_OUT_PATH = True
 
 
     # Constructor
@@ -50,7 +51,7 @@ class PreferredPath():
 
     # Methods
 
-    def retrieve_all_paths(self, method=_DEF_METHOD):
+    def retrieve_all_paths(self, method=_DEF_METHOD, out_path=_DEF_OUT_PATH):
         """
         Returns the path sequences for all source and target nodes
 
@@ -60,22 +61,25 @@ class PreferredPath():
             'rev'  : Revisits allowed. If a revisit occurs, that the path sequence equals 'None' due to entering an infinite loop
             'fwd'  : Forward only, nodes cannot be revisited and backtracking isn't allowed
             'back' : Backtracking allowed, nodes cannot be revisited and backtracking to previous nodes occur at dead ends to find alternate routes
+        out_path : bool
+            Whether to output the full path sequence (True) or the number of hops in each path sequence (False)
 
         Returns
         -------
-        out : dict
-            Path sequences for all node pairs (e.g. out[1][4] = path sequence for source node 1 and target node 4)
+        out : dict or numpy.ndarray
+            Path sequences as a dict (out_path=True) or path lengths as a matrix (out_path=False) for all node pairs.
+            E.g. out[1][4] = path sequence or path length for source node 1 and target node 4)
         """
 
         fn = self._convert_method_to_fn(method)
-        M = self._path_dict(self._res)
+        M = self._path_dict(self._res) if out_path else np.zeros((self._res, self._res))
         for source in range(self._res):
             for target in range(self._res):
                 if source != target:
-                    M[source][target] = fn(source, target)
+                    M[source][target] = PreferredPath._single_path_formatted(fn, source, target, out_path)
         return M
 
-    def retrieve_single_path(self, source, target, method=_DEF_METHOD):
+    def retrieve_single_path(self, source, target, method=_DEF_METHOD, out_path=_DEF_OUT_PATH):
         """
         Returns the preferred path sequence for a single source and target node
 
@@ -89,18 +93,46 @@ class PreferredPath():
             'rev'  : Revisits allowed. If a revisit occurs, that the path sequence equals 'None' due to entering an infinite loop
             'fwd'  : Forward only, nodes cannot be revisited and backtracking isn't allowed
             'back' : Backtracking allowed, nodes cannot be revisited and backtracking to previous nodes occur at dead ends to find alternate routes
+        out_path : bool
+            Whether to output the full path sequence (True) or the number of hops in each the sequence (False)
 
         Returns
         -------
-        out : list
-            Path sequence for the given node pair if successful
+        out : list or int
+            Path sequence as a list if successful (out_path=True) or path length as an int (out_path=False) for the given node pair
         """
 
         fn = self._convert_method_to_fn(method)
-        return fn(source, target)
+        return PreferredPath._single_path_formatted(fn, source, target, out_path)
 
 
     # Internal
+
+    @staticmethod
+    def _single_path_formatted(fn, source, target, out_path):
+        """
+        Returns the preferred path formatted as the path length or path sequence, depending on the out_path boolean.
+        Used by retrieve_all_paths and retrieve_single_path
+
+        Parameters
+        ----------
+        source : int
+            Source node
+        target : int
+            Target node
+        out_path : bool
+            Whether to output the full path sequence (True) or the number of hops in the path sequence (False)
+
+        Returns
+        -------
+        out : list or int
+            Path sequence as a list if successful (out_path=True) or path length as an int (out_path=False) for the given node pair
+        """
+
+        path = fn(source, target)
+        if out_path: return path
+        elif path is not None: return len(path) - 1
+        else: return np.inf
 
     def _fwd(self, source, target):
         """

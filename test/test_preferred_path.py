@@ -4,6 +4,7 @@
 from test.test import Test
 from preferred_path import PreferredPath
 import numpy as np
+from numpy import inf
 
 class TestPaths(Test):
 
@@ -44,7 +45,8 @@ class TestPaths(Test):
     def test_retrieve_all_paths(self):
         fn = self.pp1.retrieve_all_paths
         self.assert_raise(True, lambda: fn('a')) # Invalid method
-        test = lambda method, res: self.assertDictEqual({key: val for key, val in fn(method).items() if key != 6}, res) # 6 selects at random, tested in individual tests
+        test_path = lambda method, res: self.assertDictEqual({key: val for key, val in fn(method).items() if key != 6}, res) # 6 selects at random, tested in individual tests
+        test_hops = lambda method, res: self.assert_float(fn(method, out_path=False)[[0,1,2,3,4,5,7],:], res)
 
         # Forward
         res_fwd = {
@@ -56,6 +58,17 @@ class TestPaths(Test):
             5: {0: None, 1: [5,1], 2: [5,1,2], 3: [5,1,2,6,3], 4: [5,1,2,6,3,4], 6: [5,1,2,6], 7: None},
             7: {0: None, 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}}
             # 6 selects at random: Covered in individual tests
+        res_fwd_hops = np.array(
+            [[0,1,5,3,inf,2,4,inf],
+             [inf,0,4,2,inf,1,3,inf],
+             [3,2,0,inf,inf,1,inf,inf],
+             [inf,2,3,0,inf,1,4,inf],
+             [inf,2,3,5,0,1,4,inf],
+             [inf,1,2,4,5,0,3,inf],
+             [inf,inf,inf,inf,inf,inf,inf,0]])
+             # 6 selects at random: Covered in individual tests
+        test_path('fwd', res_fwd)
+        test_hops('fwd', res_fwd_hops)
 
         # Revisits
         res_rev = {
@@ -67,7 +80,17 @@ class TestPaths(Test):
             5: {0: None, 1: [5,1], 2: None, 3: None, 4: None, 6: None, 7: None},
             7: {0: None, 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}}
             # 6 selects at random: Covered in individual tests
-        test('rev', res_rev)
+        res_rev_hops = np.array(
+            [[0,1,inf,inf,inf,2,inf,inf],
+             [inf,0,inf,inf,inf,1,inf,inf],
+             [inf,2,0,inf,inf,1,inf,inf],
+             [inf,2,inf,0,inf,1,inf,inf],
+             [inf,2,inf,inf,0,1,inf,inf],
+             [inf,1,inf,inf,inf,0,inf,inf],
+             [inf,inf,inf,inf,inf,inf,inf,0]])
+             # 6 selects at random: Covered in individual tests
+        test_path('rev', res_rev)
+        test_hops('rev', res_rev_hops)
 
         # Backtrack
         res_back = {
@@ -79,24 +102,48 @@ class TestPaths(Test):
             5: {0: [5,1,0], 1: [5,1], 2: [5,1,2], 3: [5,1,2,6,3], 4: [5,1,2,6,3,4], 6: [5,1,2,6], 7: None},
             7: {0: None, 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}}
             # 6 selects at random: Covered in individual tests
-        test('back', res_back)
+        res_back_hops = np.array(
+            [[0,1,5,3,4,2,4,inf],
+             [1,0,4,2,3,1,3,inf],
+             [3,2,0,2,3,1,3,inf],
+             [3,2,3,0,2,1,4,inf],
+             [3,2,3,5,0,1,4,inf],
+             [2,1,2,4,5,0,3,inf],
+             [inf,inf,inf,inf,inf,inf,inf,0]])
+             # 6 selects at random: Covered in individual tests
+        test_path('back', res_back)
+        test_hops('back', res_back_hops)
 
     def test_retrieve_single_path(self):
         fn = self.pp1.retrieve_single_path
         self.assert_raise(True, lambda: fn(0, 1, 'a')) # Invalid method
-        test = lambda method, source, target, res: self.assertEqual(fn(source, target, method), res)
-        test('fwd', 0, 5, [0,1,5])    # Success
-        test('fwd', 0, 3, [0,1,5,3])  # Success when 'rev' fails
-        test('fwd', 3, 0, None)       # Failed: Needs backtracking
-        test('fwd', 0, 7, None)       # Failed: Isolated node
-        test('rev', 0, 5, [0,1,5])    # Success
-        test('rev', 0, 3, None)       # Failed: Revisited
-        test('rev', 3, 0, None)       # Failed: Revisited
-        test('rev', 0, 7, None)       # Failed: Isolated node
-        test('back', 0, 5, [0,1,5])   # Success
-        test('back', 0, 3, [0,1,5,3]) # Success when 'rev' fails
-        test('back', 3, 0, [3,5,1,0]) # Success when 'fwd' fails
-        test('back', 0, 7, None)      # Failed: Isolated node
+        test = lambda method, out_path, source, target, res: self.assertEqual(fn(source, target, method, out_path), res)
+        test_path = lambda method, source, target, res: test(method, True, source, target, res)
+        test_hops = lambda method, source, target, res: test(method, False, source, target, res)
+        test_path('fwd', 0, 5, [0,1,5])    # Success
+        test_path('fwd', 0, 3, [0,1,5,3])  # Success when 'rev' fails
+        test_path('fwd', 3, 0, None)       # Failed: Needs backtracking
+        test_path('fwd', 0, 7, None)       # Failed: Isolated node
+        test_path('rev', 0, 5, [0,1,5])    # Success
+        test_path('rev', 0, 3, None)       # Failed: Revisited
+        test_path('rev', 3, 0, None)       # Failed: Revisited
+        test_path('rev', 0, 7, None)       # Failed: Isolated node
+        test_path('back', 0, 5, [0,1,5])   # Success
+        test_path('back', 0, 3, [0,1,5,3]) # Success when 'rev' fails
+        test_path('back', 3, 0, [3,5,1,0]) # Success when 'fwd' fails
+        test_path('back', 0, 7, None)      # Failed: Isolated node
+        test_hops('fwd', 0, 5, 2)          # Success
+        test_hops('fwd', 0, 3, 3)          # Success when 'rev' fails
+        test_hops('fwd', 3, 0, inf)        # Failed: Needs backtracking
+        test_hops('fwd', 0, 7, inf)        # Failed: Isolated node
+        test_hops('rev', 0, 5, 2)          # Success
+        test_hops('rev', 0, 3, inf)        # Failed: Revisited
+        test_hops('rev', 3, 0, inf)        # Failed: Revisited
+        test_hops('rev', 0, 7, inf)        # Failed: Isolated node
+        test_hops('back', 0, 5, 2)         # Success
+        test_hops('back', 0, 3, 3)         # Success when 'rev' fails
+        test_hops('back', 3, 0, 3)         # Success when 'fwd' fails
+        test_hops('back', 0, 7, inf)       # Failed: Isolated node
 
     def test_fwd(self):
         test = lambda source, target, res: self.assertEqual(self.pp1._fwd(source, target), res)

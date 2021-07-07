@@ -242,22 +242,29 @@ For each algorithm, the weighted scores determine which of the available nodes a
 
 ### Finding single paths
 ```
-print(pp.retrieve_single_path(source=0, target=5, method='rev'))
+print(pp.retrieve_single_path(source=0, target=5, method='rev', out_path=True))
+print(pp.retrieve_single_path(source=0, target=5, method='rev', out_path=False))
 
 # [0, 1, 5]
+# 2
 
-print(pp.retrieve_single_path(source=0, target=2, method='fwd'))
+print(pp.retrieve_single_path(source=0, target=2, method='fwd', out_path=True))
+print(pp.retrieve_single_path(source=0, target=2, method='fwd', out_path=False))
 
 # [0, 1, 5, 3, 6, 2]
+# 5
 
-pp.retrieve_single_path(source=0, target=4, method='back')
+pp.retrieve_single_path(source=0, target=4, method='back', out_path=True)
+pp.retrieve_single_path(source=0, target=4, method='back', out_path=False)
 
 # [0, 1, 5, 3, 4]
+# 4
 ```
 
 ### Finding all paths
 ```
-all_paths = pp.retrieve_all_paths(method='back')
+all_paths = pp.retrieve_all_paths(method='back', out_path=True)
+all_lengths = pp.retrieve_all_paths(method='back', out_path=False)
 
 print(all_paths)
 
@@ -273,4 +280,19 @@ print(all_paths)
 print(all_paths[0][2])
 
 # [0, 1, 5, 3, 6, 2]
+
+print(all_lengths)
+
+# [[ 0.  1.  5.  3.  4.  2.  4. inf]
+#  [inf  0.  4.  2.  3.  1.  3. inf]
+#  [inf  2.  0.  2.  3.  1.  3. inf]
+#  [inf  2.  3.  0.  2.  1.  4. inf]
+#  [inf  2.  3.  5.  0.  1.  4. inf]
+#  [inf  1.  2.  4.  5.  0.  3. inf]
+#  [inf  2.  1.  4.  5.  3.  0. inf]
+#  [inf inf inf inf inf inf inf  0.]]
+
+print(all_lengths[0][2])
+
+# 5
 ```
