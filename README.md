@@ -296,3 +296,18 @@ print(all_lengths[0][2])
 
 # 5
 ```
+
+### Updating weights
+```
+pp.fn_weights = [0.2, 3.1]
+print(pp.retrieve_all_paths(method='back', out_path=False))
+
+# [[ 0.  1.  3.  5.  6.  2.  4. inf]
+#  [inf  0.  2.  4.  5.  1.  3. inf]
+#  [inf  2.  0.  2.  3.  1.  3. inf]
+#  [inf  3.  2.  0.  2.  1.  3. inf]
+#  [inf  3.  2.  4.  0.  1.  3. inf]
+#  [inf  2.  1.  3.  4.  0.  2. inf]
+#  [inf  3.  1.  3.  4.  2.  0. inf]
+#  [inf inf inf inf inf inf inf  0.]]
+```
