@@ -156,15 +156,16 @@ class TestBrain(Test):
         test(brain, 2, [0,1,3], 3)
         test(brain, 1, [0,2,3], 3)
 
-    def test_target_adjacent(self):
+    def test_is_target(self):
         M = np.array([[0,1,2],[3,0,0],[0,0,0]])
         brain = Brain(sc=M, fc=M, euc_dist=M)
-        test = lambda brain, source, target, exp: self.assertEqual(brain.target_adjacent(source, target), exp)
-        test(brain, 0, 0, False) # No self edge
-        test(brain, 0, 2, True)
+        test = lambda brain, nxt, target, exp: self.assertEqual(brain.is_target(nxt, target), exp)
+        test(brain, 0, 0, True)
+        test(brain, 0, 2, False)
         test(brain, 2, 0, False)
-        test(brain, 1, 0, True)
-        test(brain, 0, 1, True)
+        test(brain, 1, 1, True)
+        test(brain, 0, 1, False)
+        test(brain, 1, 0, False)
 
     def test_shortest_paths(self):
         M = np.array([[0,2,0,0,0],[0,0,8,3,0],[1,9,0,4,0],[0,0,4,0,0],[0,0,0,0,0]])

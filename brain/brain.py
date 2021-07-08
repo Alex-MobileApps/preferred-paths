@@ -167,18 +167,18 @@ class Brain():
 
       return self.euc_dist
 
-   def edge_angle_change(self, source, target, prev):
+   def edge_angle_change(self, loc, nxt, prev):
       """
       Returns the magnitude of the deviation from the previous edges direction (radians)
 
       Parameters
       ----------
-      source : int
-         Current path location
-      target : int
-         Next node in the path
+      loc : int
+         Current node
+      nxt : int
+         Next node
       prev : list
-         Path sequence (excluding source node)
+         Path sequence (excluding current node)
 
       Returns
       -------
@@ -186,11 +186,11 @@ class Brain():
          Magnitude of deviation (radians)
       """
 
-      if not prev or source == target: return 0
+      if not prev or loc == nxt: return 0
       last_prev = prev[-1]
-      a = self.euc_dist[last_prev, source]
-      b = self.euc_dist[source, target]
-      c = self.euc_dist[last_prev, target]
+      a = self.euc_dist[last_prev, loc]
+      b = self.euc_dist[loc, nxt]
+      c = self.euc_dist[last_prev, nxt]
       cosc = (a ** 2 + b ** 2 - c ** 2) / (2 * a * b)
       return pi - acos(cosc)
 
@@ -274,15 +274,15 @@ class Brain():
       sc_T = self.sc_bin.T
       return self.sc_bin * (A @ sc_T + sc_T @ A)
 
-   def hops_to_prev_used(self, target, prev):
+   def hops_to_prev_used(self, nxt, prev):
       """
-      Returns the lowest number of hops from any previously visited nodes to the target node
-      (i.e. shortest path from previous nodes to target node)
+      Returns the lowest number of hops from any previously visited nodes to the potential next node
+      (i.e. shortest path from previous nodes to the potential next node)
 
       Parameters
       ----------
-      target : int
-         Target node
+      nxt : int
+         Next node
       prev : list
          Path sequence (containing previously visited nodes)
 
@@ -294,16 +294,16 @@ class Brain():
 
       if not prev:
          return 0
-      return self.shortest_paths(method='hops')[:,target][prev].min()
+      return self.shortest_paths(method='hops')[:,nxt][prev].min()
 
-   def dist_to_prev_used(self, target, prev):
+   def dist_to_prev_used(self, nxt, prev):
       """
-      Returns the Euclidean distance of the target node to the closest previously visited node
+      Returns the Euclidean distance of the potential next node to the closest previously visited node
 
       Parameters
       ----------
-      target : int
-         Target node
+      nxt : int
+         Next node
       prev : list
          Path sequence (containing previously visited nodes)
 
@@ -315,26 +315,26 @@ class Brain():
 
       if not prev:
          return 0
-      return self.euc_dist[target][prev].min()
+      return self.euc_dist[nxt][prev].min()
 
-   def target_adjacent(self, source, target):
+   def is_target(self, nxt, target):
       """
-      Returns whether or node the target node is adjacent to the current node
+      Returns whether or node the potential next node is the target node
 
       Parameters
       ----------
-      source : int
-         Current path location
+      nxt : int
+         Next node
       target : int
-         Final destination node
+         Target node
 
       Returns
       -------
       out : int
-         Whether or not the target node is adjacent to the current node (1 if true, 0 otherwise)
+         Whether or not the potential next node is the target node (1 if true, 0 otherwise)
       """
 
-      return self.sc_bin[source, target] > 0
+      return int(nxt == target)
 
    def shortest_paths(self, method='hops'):
       """

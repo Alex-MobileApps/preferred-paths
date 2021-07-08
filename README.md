@@ -96,7 +96,7 @@ print(brain.edge_length())
 ### Edge angle change
 The magnitude of the change in angle (radians) compared to the previous edge's direction
 ```
-print(brain.edge_angle_change(source=1, target=2, prev=[0]))
+print(brain.edge_angle_change(loc=1, nxt=2, prev=[0]))
 
 # 1.7306155993472998
 ```
@@ -118,8 +118,7 @@ print(brain.node_strength(weighted=True, method='tot'))
 ```
 
 ### Node strength dissimilarity
-The magnitude of difference of the number of streamlines attached to each source and target nodes
-
+The magnitude of difference in the number of streamlines of any two nodes
 ```
 print(brain.node_strength_dissimilarity(weighted=True, method='out'))
 
@@ -157,31 +156,31 @@ print(brain.triangle_edge_prevalence())
 ```
 
 ### Hops to previously used nodes
-The smallest number of hops from all previously visited nodes to another node
+The smallest number of hops of all previously visited nodes to a potential next node
 ```
-print(brain.hops_to_prev_used(target=4, prev=[0,1]))
+print(brain.hops_to_prev_used(nxt=4, prev=[0,1]))
 
 # 2.0
 ```
 
 ### Distance to previously used nodes
-The smallest Euclidean distance of all previously visited nodes to another node
+The smallest Euclidean distance of all previously visited nodes to a potential next node
 ```
-print(brain.dist_to_prev_used(target=4, prev=[0,1]))
+print(brain.dist_to_prev_used(nxt=4, prev=[0,1]))
 
 # 26
 ```
 
-### Target adjacent
-Whether or not the target node is adjacent to the current node
+### Is target
+Whether or not the potential next node is the target node
 ```
-print(brain.target_adjacent(source=0, target=1))
+print(brain.is_target(nxt=0, target=2))
 
-# True
+# 0
 
-print(brain.target_adjacent(source=0, target=2))
+print(brain.is_target(nxt=2, target=2))
 
-# False
+# 1
 ```
 
 ### Shortest paths
@@ -205,12 +204,13 @@ print(brain.shortest_paths(method='hops'))
 from preferred_path import PreferredPath
 ```
 
-Each criteria is a function that returns a 'score' (non-scaled) for visiting that node (higher scores are preferred).
+Each criteria is a function that returns a non-scaled 'score' (scores are automatically scaled during the algorithm) for visiting that node (higher scores are preferred).
 
-These functions must be able to take 3 arguments:
+These functions must be able to take 4 arguments:
 - current location
 - next location
 - previously visited nodes
+- target node
 
 Different weights are given to each criteria to determine the overall scores for each potential next node.
 
@@ -221,8 +221,8 @@ An adjacency matrix is supplied to specify which edges exist in the network
 node_str = brain.node_strength(weighted=False)
 streamlines = brain.streamlines()
 fn_vector = [
-    lambda loc, nxt, prev: streamlines[loc,nxt],
-    lambda loc, nxt, prev: node_str[nxt]]
+    lambda loc, nxt, prev, target: streamlines[loc,nxt],
+    lambda loc, nxt, prev, target: node_str[nxt]]
 
 # Criteria weights
 fn_weights = [0.4, 0.7]
@@ -254,8 +254,8 @@ print(pp.retrieve_single_path(source=0, target=2, method='fwd', out_path=False))
 # [0, 1, 5, 3, 6, 2]
 # 5
 
-pp.retrieve_single_path(source=0, target=4, method='back', out_path=True)
-pp.retrieve_single_path(source=0, target=4, method='back', out_path=False)
+print(pp.retrieve_single_path(source=0, target=4, method='back', out_path=True))
+print(pp.retrieve_single_path(source=0, target=4, method='back', out_path=False))
 
 # [0, 1, 5, 3, 4]
 # 4

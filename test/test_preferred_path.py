@@ -21,7 +21,7 @@ class TestPaths(Test):
              [0,0,0,0,0,0,0,0]])
         cls.adj = (cls.sc > 0).astype(np.int)
         cls.deg = cls.adj.sum(axis=0)
-        cls.fn_vector = [lambda s, t, prev: cls.sc[s,t], lambda s, t, prev: cls.deg[t]]
+        cls.fn_vector = [lambda loc, nxt, prev, target: cls.sc[loc,nxt], lambda loc, nxt, prev, target: cls.deg[nxt]]
         cls.fn_weights = [0.4, 0.7]
         cls.pp1 = PreferredPath(cls.adj, cls.fn_vector, cls.fn_weights)
 
@@ -229,33 +229,33 @@ class TestPaths(Test):
 
     def test_get_total_scores(self):
         fn = self.pp1._get_total_scores
-        exp = fn(0, np.array([1]), [])
+        exp = fn(0, np.array([1]), [], 0)
         self.assert_float(exp, np.array([1.1]))
 
-        exp = fn(1, np.array([0,2,5]), [0]) # if revisits
+        exp = fn(1, np.array([0,2,5]), [0], 0) # if revisits
         self.assert_float(exp, np.array([.4, .7, 1.1]))
 
-        exp = fn(5, np.array([2,3,4]), [0,1])
+        exp = fn(5, np.array([2,3,4]), [0,1], 0)
         self.assert_float(exp, np.array([.77, 1.1, .67]))
 
     def test_get_temp_scores(self):
         fn1 = self.pp1._fn_vector[0]
         fn2 = self.pp1._fn_vector[1]
 
-        exp = lambda fn: PreferredPath._get_temp_scores(fn, 1, 0, np.array([1]), [])
+        exp = lambda fn: PreferredPath._get_temp_scores(fn, 1, 0, np.array([1]), [], 0)
         test = lambda fn, res: self.assert_float(exp(fn), res)
         test(fn1, np.array([1]))
         test(fn2, np.array([1]))
 
-        exp = lambda fn: PreferredPath._get_temp_scores(fn, 2, 1, np.array([2,5]), [0])
+        exp = lambda fn: PreferredPath._get_temp_scores(fn, 2, 1, np.array([2,5]), [0], 0)
         test(fn1, np.array([.44,1]))
         test(fn2, np.array([ .75,1]))
 
-        exp = lambda fn: PreferredPath._get_temp_scores(fn, 3, 5, np.array([2,3,4]), [0,1])
+        exp = lambda fn: PreferredPath._get_temp_scores(fn, 3, 5, np.array([2,3,4]), [0,1], 0)
         test(fn1, np.array([.17,   1,   .5]))
         test(fn2, np.array([  1,   1,  .67]))
 
-        exp = lambda fn: PreferredPath._get_temp_scores(fn, 1, 0, np.array([7]), [])
+        exp = lambda fn: PreferredPath._get_temp_scores(fn, 1, 0, np.array([7]), [], 0)
         test(fn2, np.array([0])) # Divide by zero handled
 
     def test_convert_method_to_fn(self):

@@ -22,12 +22,14 @@ class PreferredPath():
             Binary adjacency matrix that defines where edges are present
         fn_vector : list
             Sequence of functions used to give each node a score as the next node in the path, with parameters:
-            - source : int
-                current node
-            - target : int
+            - loc : int
+                Current node
+            - nxt : int
                 Next node
             - prev : list
                 Path sequence so far (excluding 'source')
+            - target : int
+                Target node
         fn_weights : list
             Sequence of weights used to weight the importance of each function
         validate : bool
@@ -214,11 +216,11 @@ class PreferredPath():
         remaining = np.full(self._res, True)
         while loc != target:
             remaining[loc] = False
-            next_loc = self._next_loc_fn(source, target, loc, prev, remaining)
-            if next_loc is None:
+            nxt = self._next_loc_fn(source, target, loc, prev, remaining)
+            if nxt is None:
                 return None
             prev.append(loc)
-            loc = next_loc
+            loc = nxt
         prev.append(target)
         return prev
 
@@ -243,11 +245,11 @@ class PreferredPath():
         prev = []
         remaining = np.full(self._res, True)
         while loc != target:
-            next_loc = self._next_loc_fn(source, target, loc, prev, remaining)
-            if next_loc is None or next_loc in prev:
+            nxt = self._next_loc_fn(source, target, loc, prev, remaining)
+            if nxt is None or nxt in prev:
                 return None
             prev.append(loc)
-            loc = next_loc
+            loc = nxt
         prev.append(target)
         return prev
 
@@ -273,11 +275,11 @@ class PreferredPath():
         remaining = np.full(self._res, True)
         while loc != target:
             remaining[loc] = False
-            next_loc = self._next_loc_fn(source, target, loc, prev, remaining)
-            if next_loc is not None: prev.append(loc)
-            elif prev: next_loc = prev.pop() # Backtrack here
+            nxt = self._next_loc_fn(source, target, loc, prev, remaining)
+            if nxt is not None: prev.append(loc)
+            elif prev: nxt = prev.pop() # Backtrack here
             else: return None # Nowhere to backtrack (graph is disconnected)
-            loc = next_loc
+            loc = nxt
         prev.append(loc)
         return prev
 
@@ -307,14 +309,14 @@ class PreferredPath():
         candidates = np.argwhere((remaining == True) & (self._adj[loc] == 1)).ravel()
         if candidates.size == 0:
             return None
-        total_scores = self._get_total_scores(loc, candidates, prev)
+        total_scores = self._get_total_scores(loc, candidates, prev, target)
         best_cand = candidates[np.argwhere(total_scores == total_scores.max()).ravel()]
         choice = np.random.choice(best_cand)
         if len(best_cand) > 1:
             print(f"Warning - Path {source}-{target} at node {loc}: Multiple candidate nodes found. Randomly selecting node {choice} from {best_cand} (previous: {prev})")
         return choice
 
-    def _get_total_scores(self, loc, candidates, prev):
+    def _get_total_scores(self, loc, candidates, prev, target):
         """
         Returns the overall scores for nodes as the next location in a preferred path
 
@@ -326,17 +328,19 @@ class PreferredPath():
             Nodes that can be selected as the next location
         prev : list
             Path sequence so far (excluding 'loc')
+        target : int
+            Target node (last node in the path, not necessarily in 'candidates')
         """
 
         num_cand = len(candidates)
         total_scores = np.zeros(num_cand)
         for i in range(self._fn_len):
-            temp_score = PreferredPath._get_temp_scores(self._fn_vector[i], num_cand, loc, candidates, prev)
+            temp_score = PreferredPath._get_temp_scores(self._fn_vector[i], num_cand, loc, candidates, prev, target)
             total_scores += self._fn_weights[i] * temp_score
         return total_scores
 
     @staticmethod
-    def _get_temp_scores(fn, num_cand, loc, candidates, prev):
+    def _get_temp_scores(fn, num_cand, loc, candidates, prev, target):
         """
         Returns the single function score for nodes as the next location in a preferred path
 
@@ -352,6 +356,8 @@ class PreferredPath():
             Nodes that can be selected as the next location
         prev : list
             Path sequence so far (excluding 'loc')
+        target : int
+            Target node (last node in the path, not necessarily in 'candidates')
 
         Returns
         -------
@@ -361,7 +367,7 @@ class PreferredPath():
 
         scores = np.zeros(num_cand)
         for i in range(num_cand):
-            scores[i] = fn(loc, candidates[i], prev)
+            scores[i] = fn(loc, candidates[i], prev, target)
         score_max = scores.max()
         return scores / score_max if score_max != 0 else scores
 
