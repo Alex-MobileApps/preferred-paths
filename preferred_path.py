@@ -7,7 +7,7 @@ class PreferredPath():
     # Static variables
 
     _DEF_METHOD = 'fwd'
-    _DEF_OUT_PATH = True
+    _DEF_OUT_PATH = False
 
 
     # Constructor
@@ -31,23 +31,15 @@ class PreferredPath():
         fn_weights : list
             Sequence of weights used to weight the importance of each function
         validate : bool
-            Whether or not to validate arguments on initialisation
+            Whether or not to validate parameter changes when optimising
         """
 
-        self._num_fns = len(fn_vector)
-
-        if validate:
-            validate_square(adj)
-            validate_binary(adj)
-            validate_loopless(adj)
-            if self._num_fns != len(fn_weights):
-                raise ValueError("Feature vector and weights must be the same length")
-
-        self._adj = adj
-        self._res = len(adj)
+        self._validate = validate
+        self.adj = adj
+        self._res = len(self.adj)
         self._fn_len = len(fn_vector)
         self._fn_vector = fn_vector
-        self._fn_weights = fn_weights
+        self.fn_weights = fn_weights
 
 
     # Properties
@@ -74,20 +66,46 @@ class PreferredPath():
         return self._fn_weights
 
     @fn_weights.setter
-    def fn_weights(self, weights):
+    def fn_weights(self, value):
         """
         Sets the list of weights applied to each function in the model
 
         Parameters
         ----------
-        weights : numpy.ndarray
+        value : list
             List of weights
         """
 
-        new_len = len(weights)
-        if new_len != self.fn_length:
-            raise ValueError(f"The length of the list of weights ({new_len}) differs to the length of the list of functions ({self.fn_length})")
-        self._fn_weights = weights
+        if self._validate:
+            new_len = len(value)
+            if new_len != self.fn_length:
+                raise ValueError(f"The length of the list of weights ({new_len}) differs to the length of the list of functions ({self.fn_length})")
+        self._fn_weights = value
+
+    @property
+    def adj(self):
+        """
+        Get the adjacency matrix that defines where edges are present
+        """
+        return self._adj
+
+    @adj.setter
+    def adj(self, value):
+        """
+        Sets the adjacency matrix that defines where edges are present
+
+        Parameters
+        ----------
+        value : numpy.ndarray
+            Binary adjacency matrix that defines where edges are present
+        """
+
+        if self._validate:
+            validate_square(value)
+            validate_binary(value)
+            validate_loopless(value)
+        self._adj = value
+
 
     # Methods
 
@@ -312,7 +330,7 @@ class PreferredPath():
 
         num_cand = len(candidates)
         total_scores = np.zeros(num_cand)
-        for i in range(self._num_fns):
+        for i in range(self._fn_len):
             temp_score = PreferredPath._get_temp_scores(self._fn_vector[i], num_cand, loc, candidates, prev)
             total_scores += self._fn_weights[i] * temp_score
         return total_scores

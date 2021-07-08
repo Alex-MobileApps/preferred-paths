@@ -26,14 +26,13 @@ class TestPaths(Test):
         cls.pp1 = PreferredPath(cls.adj, cls.fn_vector, cls.fn_weights)
 
     def test_init(self):
-        np.testing.assert_equal(self.pp1._adj, self.adj)
+        np.testing.assert_equal(self.pp1.adj, self.adj)
         self.assertEqual(self.pp1._res, len(self.sc))
         self.assertEqual(self.pp1._fn_vector, self.fn_vector)
         self.assertEqual(self.pp1._fn_weights, self.fn_weights)
-        self.assertEqual(self.pp1._num_fns, len(self.fn_weights))
+        self.assertEqual(self.pp1.fn_length, len(self.fn_weights))
         test = lambda arr, r=True: self.assert_raise(r, lambda: PreferredPath(arr, [], [], validate=r))
         test(np.array([[0,0]]), False)   # No validation
-        test(np.array([[0,0]]))          # Non-square
         test(np.array([[0,0]]))          # Non-square
         test(np.array([[0,2],[2,0]]))    # Non-binary
         test(np.array([[1,1],[1,0]]))    # Non-loopless
@@ -42,10 +41,45 @@ class TestPaths(Test):
         test([], [1])                    # Unequal shapes
         test([lambda s, t, prev: s], []) # Unequal shapes
 
+    def test_fn_weights(self):
+        def set_weights(weights):
+            self.pp1.fn_weights = weights
+        test_get = lambda exp: np.testing.assert_equal(self.pp1.fn_weights, exp)
+        test_set = lambda r, weights: self.assert_raise(r, lambda: set_weights(weights))
+        test_set(True, [0])                  # Wrong length
+        test_get([0.4, 0.7])                 # Unchanged
+        test_set(False, [0,0])               # Good change
+        test_get([0,0])                      # Changed
+        self.pp1._validate = False
+        test_set(False, [0])                 # No validation
+        test_get([0])                        # Changed
+
+    def test_adj(self):
+        def set_adj(adj):
+            self.pp1.adj = adj
+        test_get = lambda exp: np.testing.assert_equal(self.pp1.adj, exp)
+        test_set = lambda r, adj: self.assert_raise(r, lambda: set_adj(adj))
+        test_set(True, np.array([[0,0]])) # Non-square
+        test_get(self.adj)                # Unchanged
+        test_set(True, [[0,0],[0,0]])     # Non-numpy
+        test_get(self.adj)                # Unchanged
+        test_set(True, np.array([[2]]))   # Non-binary
+        test_get(self.adj)                # Unchanged
+        new_adj = 1 - self.pp1.adj
+        test_set(True, new_adj)           # Non-loopless
+        test_get(self.adj)                # Unchanged
+        np.fill_diagonal(new_adj, 0)
+        test_set(False, new_adj)          # Good change
+        test_get(new_adj)                 # Changed
+        self.pp1._validate = False
+        test_set(False, 'a')              # No validation
+        test_get('a')                     # Changed
+
+
     def test_retrieve_all_paths(self):
         fn = self.pp1.retrieve_all_paths
         self.assert_raise(True, lambda: fn('a')) # Invalid method
-        test_path = lambda method, res: self.assertDictEqual({key: val for key, val in fn(method).items() if key != 6}, res) # 6 selects at random, tested in individual tests
+        test_path = lambda method, res: self.assertDictEqual({key: val for key, val in fn(method, out_path=True).items() if key != 6}, res) # 6 selects at random, tested in individual tests
         test_hops = lambda method, res: self.assert_float(fn(method, out_path=False)[[0,1,2,3,4,5,7],:], res)
 
         # Forward
