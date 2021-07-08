@@ -45,9 +45,49 @@ class PreferredPath():
 
         self._adj = adj
         self._res = len(adj)
+        self._fn_len = len(fn_vector)
         self._fn_vector = fn_vector
         self._fn_weights = fn_weights
 
+
+    # Properties
+
+    @property
+    def fn_length(self):
+        """
+        Get the number of functions used as criteria in the model
+        """
+        return self._fn_len
+
+    @property
+    def fn_vector(self):
+        """
+        Get the list of functions used as criteria in the model
+        """
+        return self._fn_vector
+
+    @property
+    def fn_weights(self):
+        """
+        Get the list of weights applied to each function in the model
+        """
+        return self._fn_weights
+
+    @fn_weights.setter
+    def fn_weights(self, weights):
+        """
+        Sets the list of weights applied to each function in the model
+
+        Parameters
+        ----------
+        weights : numpy.ndarray
+            List of weights
+        """
+
+        new_len = len(weights)
+        if new_len != self.fn_length:
+            raise ValueError(f"The length of the list of weights ({new_len}) differs to the length of the list of functions ({self.fn_length})")
+        self._fn_weights = weights
 
     # Methods
 
