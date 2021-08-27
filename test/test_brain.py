@@ -15,39 +15,56 @@ class TestBrain(Test):
         sc = np.array([[9,-3,4],[-2,-9,2],[1,0,0]])
         fc = -sc
         euc_dist = 2 * sc
+        hubs = np.array([0,2])
 
         # Failed brains
         non_square = np.array([[0,1]])
         non_np = [[0,1],[1,0]]
         small = np.array(non_np)
-        self.assert_raise(True, lambda: Brain(sc,         non_np,     euc_dist, 1, 1))      # Non numpy
+        self.assert_raise(True, lambda: Brain(sc,         non_np,     euc_dist, 1, 1))             # Non numpy
         self.assert_raise(True, lambda: Brain(non_np,     fc,         euc_dist, 1, 1))
         self.assert_raise(True, lambda: Brain(sc,         fc,         non_np, 1, 1))
-        self.assert_raise(True, lambda: Brain(sc,         non_square, euc_dist, 1, 1))      # Non square
+        self.assert_raise(True, lambda: Brain(sc,         non_square, euc_dist, 1, 1))             # Non square
         self.assert_raise(True, lambda: Brain(non_square, fc,         euc_dist, 1, 1))
         self.assert_raise(True, lambda: Brain(sc,         fc,         non_square, 1, 1))
-        self.assert_raise(True, lambda: Brain(sc,         small,      euc_dist, 1, 1))      # Resolution mismatch
+        self.assert_raise(True, lambda: Brain(sc,         small,      euc_dist, 1, 1))             # Resolution mismatch
         self.assert_raise(True, lambda: Brain(small,      fc,         euc_dist, 1, 1))
         self.assert_raise(True, lambda: Brain(sc,         fc,         small, 1, 1))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs=[-1]))  # Invalid hubs
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs=[3]))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs='a'))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs=[[0]]))
 
         # Brain
         loopless = lambda M: M * (1 - np.eye(len(M)))
         test_wei = lambda a, b: self.assert_float(a, loopless(b))
         test_bin = lambda a, b, c, d: self.assert_float(a, loopless(binarise_matrix(b, c, d)))
-        brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=False)
-        np.testing.assert_equal(brain.sc_directed, False)
-        brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=2, fc_thresh=-2, sc_thresh_type='pos', fc_thresh_type='neg')
-        test_wei(brain.sc, sc)
-        test_wei(brain.fc, fc)
-        test_wei(brain.euc_dist, euc_dist)
-        test_bin(brain.sc_bin, sc,  2, 'pos')
-        test_bin(brain.fc_bin, fc, -2, 'neg')
-        np.testing.assert_equal(brain.sc_directed, True)
-        np.testing.assert_equal(brain.sc_thresh, 2)
-        np.testing.assert_equal(brain.fc_thresh, -2)
-        np.testing.assert_equal(brain.sc_thresh_type, 'pos')
-        np.testing.assert_equal(brain.fc_thresh_type, 'neg')
-        np.testing.assert_equal(brain.res, 3)
+        brain1 = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=False, hubs=hubs)
+        brain2 = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=2, fc_thresh=-2, sc_thresh_type='pos', fc_thresh_type='neg')
+
+        # SC
+        test_wei(brain2.sc, sc)
+        test_bin(brain2.sc_bin, sc,  2, 'pos')
+        np.testing.assert_equal(brain1.sc_directed, False)
+        np.testing.assert_equal(brain2.sc_directed, True)
+
+        # FC
+        test_wei(brain2.fc, fc)
+        test_bin(brain2.fc_bin, fc, -2, 'neg')
+
+        # Euc dist
+        test_wei(brain2.euc_dist, euc_dist)
+
+        # Thresholds
+        np.testing.assert_equal(brain2.sc_thresh, 2)
+        np.testing.assert_equal(brain2.fc_thresh, -2)
+        np.testing.assert_equal(brain2.sc_thresh_type, 'pos')
+        np.testing.assert_equal(brain2.fc_thresh_type, 'neg')
+
+        # Misc
+        np.testing.assert_equal(brain1._hubs, hubs)
+        np.testing.assert_equal(brain2._hubs, np.array([]))
+        np.testing.assert_equal(brain2.res, 3)
 
     def test_streamlines(self):
         M = np.array([[0,5],[0.5,0]])
@@ -166,6 +183,13 @@ class TestBrain(Test):
         test(brain, 1, 1, True)
         test(brain, 0, 1, False)
         test(brain, 1, 0, False)
+
+    def test_hubs(self):
+        M = np.array([[0,1,2],[3,0,0],[0,0,0]])
+        brain = lambda hubs: Brain(sc=M, fc=M, euc_dist=M, hubs=hubs)
+        test = lambda hubs, binary, exp: np.testing.assert_equal(brain(hubs).hubs(binary), exp)
+        test([0,2], False, np.array([0,2]))
+        test([0,2], True, np.array([1,0,1]))
 
     def test_shortest_paths(self):
         M = np.array([[0,2,0,0,0],[0,0,8,3,0],[1,9,0,4,0],[0,0,4,0,0],[0,0,0,0,0]])

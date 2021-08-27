@@ -15,7 +15,7 @@ class Brain():
 
    # Constructor
 
-   def __init__(self, sc, fc, euc_dist, sc_directed=_DEF_SC_DIR, sc_thresh=_DEF_SC_THRESH, fc_thresh=_DEF_FC_THRESH, sc_thresh_type=_DEF_THRESH_TYPE, fc_thresh_type=_DEF_THRESH_TYPE):
+   def __init__(self, sc, fc, euc_dist, sc_directed=_DEF_SC_DIR, sc_thresh=_DEF_SC_THRESH, fc_thresh=_DEF_FC_THRESH, sc_thresh_type=_DEF_THRESH_TYPE, fc_thresh_type=_DEF_THRESH_TYPE, hubs=None):
       """
       Contains weighted and binarised connectome matrices of a brain, as well as functions that compute features of these connectomes
 
@@ -36,6 +36,8 @@ class Brain():
          - 'pos' : values less than thresh_val are given 0. Other values are given 1.
          - 'neg' : values greater than thresh_val are given 0. Other values are given 1.
          - 'abs' : absolute values less than the absolute value of thresh_val are given 0. Other values are given 1.
+      hubs : numpy.ndarray
+         Hub node indexes
       """
 
       self._sc_thresh = float(sc_thresh)
@@ -53,6 +55,10 @@ class Brain():
       self._fc_bin = Brain._get_bin_matrix(self._fc, self._fc_thresh, self._fc_thresh_type)
       self._sc_directed = sc_directed
       self._sp_hops = None
+      self._hubs = np.array(hubs) if hubs is not None else np.array([]) # Check that they are correct indexes i.e. not too large or below 0
+      if len(self._hubs) != 0:
+         if self._hubs.min() < 0 or self._hubs.max() > len(self._sc) - 1 or len(self._hubs.shape) > 1:
+            raise ValueError("Invalid hub node indexes")
 
 
    # Properties
@@ -336,6 +342,9 @@ class Brain():
 
       return int(nxt == target)
 
+   def is_target_region(self):
+      raise NotImplementedError()
+
    def shortest_paths(self, method='hops'):
       """
       Returns the shortest path lengths between any two nodes
@@ -361,6 +370,28 @@ class Brain():
          return dijkstra(self.sc_bin * self.euc_dist, directed=self.sc_directed, unweighted=False)
       else:
          raise ValueError("Invalid method")
+
+   def hubs(self, binary=False):
+      """
+      Returns the brain's hub nodes
+
+      Parameters
+      ----------
+      binary : bool
+         Whether to return the indexes of the hub nodes, or a binary array for all nodes indicating which ones are hubs
+
+      Returns
+      -------
+      out : numpy.ndarray
+         Binary vector indicating which nodes are hub nodes
+      """
+
+      if not binary:
+         return self._hubs
+      else:
+         M = np.zeros(self.res, dtype=np.int)
+         M[self._hubs] = 1
+         return M
 
 
    # Internal

@@ -60,7 +60,7 @@ euc_dist = np.array(
      [76, 83, 96, 69, 82, 77,  0, 76],
      [32, 45, 67, 46, 40, 46, 76,  0]])
 
-brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=1, fc_thresh=0.01)
+brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=1, fc_thresh=0.01, hubs=[1,4,5])
 ```
 
 ### Streamlines
@@ -181,6 +181,18 @@ print(brain.is_target(nxt=0, target=2))
 print(brain.is_target(nxt=2, target=2))
 
 # 1
+```
+
+### Hubs
+Hub nodes in the brain
+```
+print(brain.hubs(binary=False))
+
+# [1 4 5]
+
+print(brain.hubs(binary=True))
+
+# [0 1 0 0 1 1 0 0]
 ```
 
 ### Shortest paths
