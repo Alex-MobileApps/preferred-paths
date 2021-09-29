@@ -60,7 +60,11 @@ euc_dist = np.array(
      [76, 83, 96, 69, 82, 77,  0, 76],
      [32, 45, 67, 46, 40, 46, 76,  0]])
 
-brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=1, fc_thresh=0.01, hubs=[1,4,5])
+hubs = [1, 4, 5]
+
+regions = [0, 0, 1, 2, 2, 2, 3, 4]
+
+brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=1, fc_thresh=0.01, hubs=hubs, regions=regions)
 ```
 
 ### Streamlines
@@ -183,6 +187,18 @@ print(brain.is_target_node(nxt=2, target=2))
 # 1
 ```
 
+### Is target region
+Returns whether or not a potential next node is in the target node's region
+```
+print(brain.is_target_region(nxt=3, target=5))
+
+# 1
+
+print(brain.is_target_region(nxt=3, target=1))
+
+# 0
+```
+
 ### Hubs
 Hub nodes in the brain
 ```
@@ -193,6 +209,18 @@ print(brain.hubs(binary=False))
 print(brain.hubs(binary=True))
 
 # [0 1 0 0 1 1 0 0]
+```
+
+### Neighbour of just visited node
+Returns whether or not a potential next node neighbours the most recently visited node
+```
+print(brain.neighbour_just_visited_node(nxt=1, prev_nodes=[4,5]))
+
+# 1
+
+print(brain.neighbour_just_visited_node(nxt=6, prev_nodes=[4,5]))
+
+# 0
 ```
 
 ### Shortest paths
@@ -239,7 +267,7 @@ fn_vector = [
 # Criteria weights
 fn_weights = [0.4, 0.7]
 
-## Preferred path object
+# Preferred path object
 pp = PreferredPath(adj=brain.sc_bin, fn_vector=fn_vector, fn_weights=fn_weights)
 ```
 
