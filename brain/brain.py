@@ -422,6 +422,27 @@ class Brain():
          M[self._hubs] = 1
          return M
 
+   def neighbour_just_visited_node(self, nxt, prev_nodes):
+      """
+      Returns whether or not a potential next node neighbours the most recently visited node
+
+      Parameters
+      ----------
+      nxt : int
+          Next node
+      prev_nodes : list
+          Path sequence (containing previously visited nodes)
+
+      Returns
+      -------
+      out : int
+          Whether or not the potential next node neighbours the just visited node (1 if true, 0 otherwise)
+      """
+
+      if not prev_nodes:
+         return 0
+      return self.sc_bin[prev_nodes[-1], nxt]
+
 
    # Internal
 

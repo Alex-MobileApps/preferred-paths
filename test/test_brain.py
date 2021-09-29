@@ -220,5 +220,15 @@ class TestBrain(Test):
         self.assert_float(brain.shortest_paths('hops'), np.array([[0,1,1,2,-1],[1,0,1,2,-1],[1,1,0,1,-1],[2,2,1,0,-1],[-1,-1,-1,-1,0]]))
         self.assert_float(brain.shortest_paths('dist'), np.array([[0,4,2,10,-1],[4,0,6,14,-1],[2,6,0,8,-1],[10,14,8,0,-1],[-1,-1,-1,-1,0]]))
 
+    def test_neighbour_just_visited_node(self):
+        M = np.array([[0,1,1,0,0],[1,0,0,1,1],[1,0,0,1,0],[0,1,1,0,1],[0,1,0,1,0]])
+        brain = Brain(sc=M, fc=M, euc_dist=M)
+        test = lambda brain, nxt, prev_nodes, exp: self.assertEqual(brain.neighbour_just_visited_node(nxt, prev_nodes), exp)
+        test(brain, 2, [1],   False)
+        test(brain, 0, [0],   False)
+        test(brain, 3, [1],   True)
+        test(brain, 3, [0,1], True)
+        test(brain, 0, [2,3], False)
+
 if __name__ == '__main__':
     TestBrain.main()
