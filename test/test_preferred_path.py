@@ -4,7 +4,6 @@
 from test.test import Test
 from preferred_path import PreferredPath
 import numpy as np
-from numpy import inf
 
 class TestPaths(Test):
 
@@ -93,13 +92,13 @@ class TestPaths(Test):
             7: {0: None, 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}}
             # 6 selects at random: Covered in individual tests
         res_fwd_hops = np.array(
-            [[0,1,5,3,inf,2,4,inf],
-             [inf,0,4,2,inf,1,3,inf],
-             [3,2,0,inf,inf,1,inf,inf],
-             [inf,2,3,0,inf,1,4,inf],
-             [inf,2,3,5,0,1,4,inf],
-             [inf,1,2,4,5,0,3,inf],
-             [inf,inf,inf,inf,inf,inf,inf,0]])
+            [[0,1,5,3,-1,2,4,-1],
+             [-1,0,4,2,-1,1,3,-1],
+             [3,2,0,-1,-1,1,-1,-1],
+             [-1,2,3,0,-1,1,4,-1],
+             [-1,2,3,5,0,1,4,-1],
+             [-1,1,2,4,5,0,3,-1],
+             [-1,-1,-1,-1,-1,-1,-1,0]])
              # 6 selects at random: Covered in individual tests
         test_path('fwd', res_fwd)
         test_hops('fwd', res_fwd_hops)
@@ -115,13 +114,13 @@ class TestPaths(Test):
             7: {0: None, 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}}
             # 6 selects at random: Covered in individual tests
         res_rev_hops = np.array(
-            [[0,1,inf,inf,inf,2,inf,inf],
-             [inf,0,inf,inf,inf,1,inf,inf],
-             [inf,2,0,inf,inf,1,inf,inf],
-             [inf,2,inf,0,inf,1,inf,inf],
-             [inf,2,inf,inf,0,1,inf,inf],
-             [inf,1,inf,inf,inf,0,inf,inf],
-             [inf,inf,inf,inf,inf,inf,inf,0]])
+            [[0,1,-1,-1,-1,2,-1,-1],
+             [-1,0,-1,-1,-1,1,-1,-1],
+             [-1,2,0,-1,-1,1,-1,-1],
+             [-1,2,-1,0,-1,1,-1,-1],
+             [-1,2,-1,-1,0,1,-1,-1],
+             [-1,1,-1,-1,-1,0,-1,-1],
+             [-1,-1,-1,-1,-1,-1,-1,0]])
              # 6 selects at random: Covered in individual tests
         test_path('rev', res_rev)
         test_hops('rev', res_rev_hops)
@@ -137,13 +136,13 @@ class TestPaths(Test):
             7: {0: None, 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}}
             # 6 selects at random: Covered in individual tests
         res_back_hops = np.array(
-            [[0,1,5,3,4,2,4,inf],
-             [1,0,4,2,3,1,3,inf],
-             [3,2,0,2,3,1,3,inf],
-             [3,2,3,0,2,1,4,inf],
-             [3,2,3,5,0,1,4,inf],
-             [2,1,2,4,5,0,3,inf],
-             [inf,inf,inf,inf,inf,inf,inf,0]])
+            [[0,1,5,3,4,2,4,-1],
+             [1,0,4,2,3,1,3,-1],
+             [3,2,0,2,3,1,3,-1],
+             [3,2,3,0,2,1,4,-1],
+             [3,2,3,5,0,1,4,-1],
+             [2,1,2,4,5,0,3,-1],
+             [-1,-1,-1,-1,-1,-1,-1,0]])
              # 6 selects at random: Covered in individual tests
         test_path('back', res_back)
         test_hops('back', res_back_hops)
@@ -168,16 +167,16 @@ class TestPaths(Test):
         test_path('back', 0, 7, None)      # Failed: Isolated node
         test_hops('fwd', 0, 5, 2)          # Success
         test_hops('fwd', 0, 3, 3)          # Success when 'rev' fails
-        test_hops('fwd', 3, 0, inf)        # Failed: Needs backtracking
-        test_hops('fwd', 0, 7, inf)        # Failed: Isolated node
+        test_hops('fwd', 3, 0, -1)         # Failed: Needs backtracking
+        test_hops('fwd', 0, 7, -1)         # Failed: Isolated node
         test_hops('rev', 0, 5, 2)          # Success
-        test_hops('rev', 0, 3, inf)        # Failed: Revisited
-        test_hops('rev', 3, 0, inf)        # Failed: Revisited
-        test_hops('rev', 0, 7, inf)        # Failed: Isolated node
+        test_hops('rev', 0, 3, -1)         # Failed: Revisited
+        test_hops('rev', 3, 0, -1)         # Failed: Revisited
+        test_hops('rev', 0, 7, -1)         # Failed: Isolated node
         test_hops('back', 0, 5, 2)         # Success
         test_hops('back', 0, 3, 3)         # Success when 'rev' fails
         test_hops('back', 3, 0, 3)         # Success when 'fwd' fails
-        test_hops('back', 0, 7, inf)       # Failed: Isolated node
+        test_hops('back', 0, 7, -1)        # Failed: Isolated node
 
     def test_fwd(self):
         test = lambda source, target, res: self.assertEqual(self.pp1._fwd(source, target), res)

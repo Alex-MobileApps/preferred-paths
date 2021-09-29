@@ -55,6 +55,7 @@ class Brain():
       self._fc_bin = Brain._get_bin_matrix(self._fc, self._fc_thresh, self._fc_thresh_type)
       self._sc_directed = sc_directed
       self._sp_hops = None
+      self._sp_dist = None
       self._hubs = np.array(hubs) if hubs is not None else np.array([]) # Check that they are correct indexes i.e. not too large or below 0
       if len(self._hubs) != 0:
          if self._hubs.min() < 0 or self._hubs.max() > len(self._sc) - 1 or len(self._hubs.shape) > 1:
@@ -365,9 +366,13 @@ class Brain():
       if method == 'hops':
          if self._sp_hops is None:
             self._sp_hops = dijkstra(self.sc_bin, directed=self.sc_directed, unweighted=True)
+            self._sp_hops[self._sp_hops == np.inf] = -1
          return self._sp_hops
       elif method == 'dist':
-         return dijkstra(self.sc_bin * self.euc_dist, directed=self.sc_directed, unweighted=False)
+         if self._sp_dist is None:
+            self._sp_dist = dijkstra(self.sc_bin * self.euc_dist, directed=self.sc_directed, unweighted=False)
+            self._sp_dist[self._sp_dist == np.inf] = -1
+         return self._sp_dist
       else:
          raise ValueError("Invalid method")
 

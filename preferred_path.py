@@ -1,5 +1,4 @@
 import numpy as np
-
 from utils import validate_binary, validate_loopless, validate_square
 
 class PreferredPath():
@@ -131,7 +130,7 @@ class PreferredPath():
             E.g. out[1][4] = path sequence or path length for source node 1 and target node 4)
         """
 
-        fn = self._convert_method_to_fn(method)
+        fn = self._convert_method_to_fn(method) # e.g. forward only
         M = self._path_dict(self._res) if out_path else np.zeros((self._res, self._res))
         for source in range(self._res):
             for target in range(self._res):
@@ -192,7 +191,7 @@ class PreferredPath():
         path = fn(source, target)
         if out_path: return path
         elif path is not None: return len(path) - 1
-        else: return np.inf
+        else: return -1
 
     def _fwd(self, source, target):
         """
@@ -306,15 +305,16 @@ class PreferredPath():
             Next location
         """
 
-        candidates = np.argwhere((remaining == True) & (self._adj[loc] == 1)).ravel()
+        candidates = np.where((remaining == True) & (self._adj[loc] == 1))[0]
         if candidates.size == 0:
             return None
         total_scores = self._get_total_scores(loc, candidates, prev, target)
-        best_cand = candidates[np.argwhere(total_scores == total_scores.max()).ravel()]
-        choice = np.random.choice(best_cand)
-        if len(best_cand) > 1:
-            print(f"Warning - Path {source}-{target} at node {loc}: Multiple candidate nodes found. Randomly selecting node {choice} from {best_cand} (previous: {prev})")
-        return choice
+        total_max = total_scores.max()
+        mask = np.where(total_scores == total_max)
+        best_cand = candidates[mask]
+        if best_cand.size == 1:
+            return best_cand[0]
+        return np.random.choice(best_cand)
 
     def _get_total_scores(self, loc, candidates, prev, target):
         """
@@ -332,7 +332,7 @@ class PreferredPath():
             Target node (last node in the path, not necessarily in 'candidates')
         """
 
-        num_cand = len(candidates)
+        num_cand = candidates.size
         total_scores = np.zeros(num_cand)
         for i in range(self._fn_len):
             temp_score = PreferredPath._get_temp_scores(self._fn_vector[i], num_cand, loc, candidates, prev, target)
@@ -369,7 +369,9 @@ class PreferredPath():
         for i in range(num_cand):
             scores[i] = fn(loc, candidates[i], prev, target)
         score_max = scores.max()
-        return scores / score_max if score_max != 0 else scores
+        if score_max != 0:
+            return scores / score_max
+        return scores
 
     def _convert_method_to_fn(self, method):
         """
