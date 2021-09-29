@@ -15,7 +15,7 @@ class Brain():
 
    # Constructor
 
-   def __init__(self, sc, fc, euc_dist, sc_directed=_DEF_SC_DIR, sc_thresh=_DEF_SC_THRESH, fc_thresh=_DEF_FC_THRESH, sc_thresh_type=_DEF_THRESH_TYPE, fc_thresh_type=_DEF_THRESH_TYPE, hubs=None):
+   def __init__(self, sc, fc, euc_dist, sc_directed=_DEF_SC_DIR, sc_thresh=_DEF_SC_THRESH, fc_thresh=_DEF_FC_THRESH, sc_thresh_type=_DEF_THRESH_TYPE, fc_thresh_type=_DEF_THRESH_TYPE, hubs=None, regions=None):
       """
       Contains weighted and binarised connectome matrices of a brain, as well as functions that compute features of these connectomes
 
@@ -38,6 +38,8 @@ class Brain():
          - 'abs' : absolute values less than the absolute value of thresh_val are given 0. Other values are given 1.
       hubs : numpy.ndarray
          Hub node indexes
+      regions : numpy.ndarray
+         Region (as an integer) that each node is assigned to
       """
 
       self._sc_thresh = float(sc_thresh)
@@ -56,10 +58,16 @@ class Brain():
       self._sc_directed = sc_directed
       self._sp_hops = None
       self._sp_dist = None
-      self._hubs = np.array(hubs) if hubs is not None else np.array([]) # Check that they are correct indexes i.e. not too large or below 0
+
+      self._hubs = np.array(hubs, dtype=np.int) if hubs is not None else np.array([], dtype=np.int)
       if len(self._hubs) != 0:
          if self._hubs.min() < 0 or self._hubs.max() > len(self._sc) - 1 or len(self._hubs.shape) > 1:
             raise ValueError("Invalid hub node indexes")
+
+      self._regions = np.array(regions, dtype=np.int) if regions is not None else np.array([], dtype=np.int)
+      if len(self._regions) != 0:
+         if len(self._regions) < self.res or len(self._regions.shape) > 1:
+            raise ValueError("Invalid regions")
 
 
    # Properties
@@ -174,7 +182,7 @@ class Brain():
 
       return self.euc_dist
 
-   def edge_angle_change(self, loc, nxt, prev):
+   def edge_angle_change(self, loc, nxt, prev_nodes):
       """
       Returns the magnitude of the deviation from the previous edges direction (radians)
 
@@ -184,7 +192,7 @@ class Brain():
          Current node
       nxt : int
          Next node
-      prev : list
+      prev_nodes : list
          Path sequence (excluding current node)
 
       Returns
@@ -193,8 +201,8 @@ class Brain():
          Magnitude of deviation (radians)
       """
 
-      if not prev or loc == nxt: return 0
-      last_prev = prev[-1]
+      if not prev_nodes or loc == nxt: return 0
+      last_prev = prev_nodes[-1]
       a = self.euc_dist[last_prev, loc]
       b = self.euc_dist[loc, nxt]
       c = self.euc_dist[last_prev, nxt]
@@ -281,7 +289,7 @@ class Brain():
       sc_T = self.sc_bin.T
       return self.sc_bin * (A @ sc_T + sc_T @ A)
 
-   def hops_to_prev_used(self, nxt, prev):
+   def hops_to_prev_used_nodes(self, nxt, prev_nodes):
       """
       Returns the lowest number of hops from any previously visited nodes to the potential next node
       (i.e. shortest path from previous nodes to the potential next node)
@@ -290,7 +298,7 @@ class Brain():
       ----------
       nxt : int
          Next node
-      prev : list
+      prev_nodes : list
          Path sequence (containing previously visited nodes)
 
       Returns
@@ -299,11 +307,11 @@ class Brain():
          Fewest number of hops to a previously used node
       """
 
-      if not prev:
+      if not prev_nodes:
          return 0
-      return self.shortest_paths(method='hops')[:,nxt][prev].min()
+      return self.shortest_paths(method='hops')[:,nxt][prev_nodes].min()
 
-   def dist_to_prev_used(self, nxt, prev):
+   def dist_to_prev_used_nodes(self, nxt, prev_nodes):
       """
       Returns the Euclidean distance of the potential next node to the closest previously visited node
 
@@ -311,7 +319,7 @@ class Brain():
       ----------
       nxt : int
          Next node
-      prev : list
+      prev_nodes : list
          Path sequence (containing previously visited nodes)
 
       Returns
@@ -320,11 +328,11 @@ class Brain():
          Euclidean distance to closest visited node
       """
 
-      if not prev:
+      if not prev_nodes:
          return 0
-      return self.euc_dist[nxt][prev].min()
+      return self.euc_dist[nxt][prev_nodes].min()
 
-   def is_target(self, nxt, target):
+   def is_target_node(self, nxt, target):
       """
       Returns whether or node the potential next node is the target node
 
@@ -343,8 +351,24 @@ class Brain():
 
       return int(nxt == target)
 
-   def is_target_region(self):
-      raise NotImplementedError()
+   def is_target_region(self, nxt, target):
+      """
+      Returns whether or not a potential next node is in the target node's region
+
+      Parameters
+      ----------
+      nxt : int
+          Next node
+      target : int
+          Target node
+
+      Returns
+      -------
+      out : int
+          Whether or not the potential next node is the target node's region (1 if true, 0 otherwise)
+      """
+
+      return int(self._regions[nxt] == self._regions[target])
 
    def shortest_paths(self, method='hops'):
       """

@@ -15,6 +15,7 @@ class TestBrain(Test):
         fc = -sc
         euc_dist = 2 * sc
         hubs = np.array([0,2])
+        regions = np.array([0,1,1])
 
         # Failed brains
         non_square = np.array([[0,1]])
@@ -31,14 +32,20 @@ class TestBrain(Test):
         self.assert_raise(True, lambda: Brain(sc,         fc,         small, 1, 1))
         self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs=[-1]))  # Invalid hubs
         self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs=[3]))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs=1))
         self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs='a'))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs=['a']))
         self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, hubs=[[0]]))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, regions=1))   # Invalid hubs
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, regions='a'))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, regions=['a','a','a']))
+        self.assert_raise(True, lambda: Brain(sc,         fc,         euc_dist, 1, 1, regions=[[0],[1],[1]]))
 
         # Brain
         loopless = lambda M: M * (1 - np.eye(len(M)))
         test_wei = lambda a, b: self.assert_float(a, loopless(b))
         test_bin = lambda a, b, c, d: self.assert_float(a, loopless(binarise_matrix(b, c, d)))
-        brain1 = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=False, hubs=hubs)
+        brain1 = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=False, hubs=hubs, regions=regions)
         brain2 = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=2, fc_thresh=-2, sc_thresh_type='pos', fc_thresh_type='neg')
 
         # SC
@@ -63,6 +70,8 @@ class TestBrain(Test):
         # Misc
         np.testing.assert_equal(brain1._hubs, hubs)
         np.testing.assert_equal(brain2._hubs, np.array([]))
+        np.testing.assert_equal(brain1._regions, regions)
+        np.testing.assert_equal(brain2._regions, np.array([]))
         np.testing.assert_equal(brain2.res, 3)
 
     def test_streamlines(self):
@@ -140,10 +149,10 @@ class TestBrain(Test):
         brain = Brain(sc=sc, fc=fc, euc_dist=sc, sc_directed=False, fc_thresh=1)
         self.assert_float(brain.triangle_edge_prevalence(), np.array([[0,1,1,1,1],[1,0,0,0,1],[1,0,0,0,0],[1,0,0,0,1],[1,1,0,1,0]]))
 
-    def test_hops_to_prev_used(self):
+    def test_hops_to_prev_used_nodes(self):
         M = np.array([[0,1,0,0,0],[2,0,3,0,0],[0,0,0,4,0],[0,6,0,0,0],[0,0,0,0,0]])
         brain = Brain(sc=M, fc=M, euc_dist=M, sc_directed=True)
-        test = lambda brain, target, prev, exp: self.assert_float(brain.hops_to_prev_used(target, prev), exp)
+        test = lambda brain, target, prev, exp: self.assert_float(brain.hops_to_prev_used_nodes(target, prev), exp)
         test(brain, 0, [], 0)       # No prev
         test(brain, 0, [0], 0)      # Self
         test(brain, 4, [0], -1)     # Disconnected
@@ -160,10 +169,10 @@ class TestBrain(Test):
         test(brain, 0, [2,3], 2)
         test(brain, 2, [0,3], 1)
 
-    def test_dist_to_prev_used(self):
+    def test_dist_to_prev_used_nodes(self):
         M = np.array([[0,4,3,5],[4,0,5,3],[3,5,0,4],[5,3,4,0]])
         brain = Brain(sc=M, fc=M, euc_dist=M)
-        test = lambda brain, target, prev, exp: self.assert_float(brain.dist_to_prev_used(target, prev), exp)
+        test = lambda brain, target, prev, exp: self.assert_float(brain.dist_to_prev_used_nodes(target, prev), exp)
         test(brain, 0, [], 0)       # No fail on empty
         test(brain, 0, [0,1], 0)    # Target in prev
         test(brain, 1, [0,3], 3)    # Choose closest
@@ -172,16 +181,27 @@ class TestBrain(Test):
         test(brain, 2, [0,1,3], 3)
         test(brain, 1, [0,2,3], 3)
 
-    def test_is_target(self):
+    def test_is_target_node(self):
         M = np.array([[0,1,2],[3,0,0],[0,0,0]])
         brain = Brain(sc=M, fc=M, euc_dist=M)
-        test = lambda brain, nxt, target, exp: self.assertEqual(brain.is_target(nxt, target), exp)
+        test = lambda brain, nxt, target, exp: self.assertEqual(brain.is_target_node(nxt, target), exp)
         test(brain, 0, 0, True)
         test(brain, 0, 2, False)
         test(brain, 2, 0, False)
         test(brain, 1, 1, True)
         test(brain, 0, 1, False)
         test(brain, 1, 0, False)
+
+    def test_is_target_region(self):
+        M = np.array([[0,1,2],[3,0,0],[0,0,0]])
+        regions = np.array([0,1,1])
+        brain = Brain(sc=M, fc=M, euc_dist=M, regions=regions)
+        test = lambda brain, nxt, target, exp: self.assertEqual(brain.is_target_region(nxt, target), exp)
+        test(brain, 0, 0, True)
+        test(brain, 1, 1, True)
+        test(brain, 0, 1, False)
+        test(brain, 0, 2, False)
+        test(brain, 1, 2, True)
 
     def test_hubs(self):
         M = np.array([[0,1,2],[3,0,0],[0,0,0]])
