@@ -96,7 +96,7 @@ print(brain.edge_length())
 ### Edge angle change
 The magnitude of the change in angle (radians) compared to the previous edge's direction
 ```
-print(brain.edge_angle_change(loc=1, nxt=2, prev=[0]))
+print(brain.edge_angle_change(loc=1, nxt=2, prev_nodes=[0]))
 
 # 1.7306155993472998
 ```
@@ -158,7 +158,7 @@ print(brain.triangle_edge_prevalence())
 ### Hops to previously used nodes
 The smallest number of hops of all previously visited nodes to a potential next node
 ```
-print(brain.hops_to_prev_used(nxt=4, prev=[0,1]))
+print(brain.hops_to_prev_used_nodes(nxt=4, prev_nodes=[0,1]))
 
 # 2.0
 ```
@@ -166,19 +166,19 @@ print(brain.hops_to_prev_used(nxt=4, prev=[0,1]))
 ### Distance to previously used nodes
 The smallest Euclidean distance of all previously visited nodes to a potential next node
 ```
-print(brain.dist_to_prev_used(nxt=4, prev=[0,1]))
+print(brain.dist_to_prev_used_nodes(nxt=4, prev_nodes=[0,1]))
 
 # 26
 ```
 
-### Is target
+### Is target node
 Whether or not the potential next node is the target node
 ```
-print(brain.is_target(nxt=0, target=2))
+print(brain.is_target_node(nxt=0, target=2))
 
 # 0
 
-print(brain.is_target(nxt=2, target=2))
+print(brain.is_target_node(nxt=2, target=2))
 
 # 1
 ```
@@ -233,8 +233,8 @@ An adjacency matrix is supplied to specify which edges exist in the network
 node_str = brain.node_strength(weighted=False)
 streamlines = brain.streamlines()
 fn_vector = [
-    lambda loc, nxt, prev, target: streamlines[loc,nxt],
-    lambda loc, nxt, prev, target: node_str[nxt]]
+    lambda loc, nxt, prev_nodes, target: streamlines[loc,nxt],
+    lambda loc, nxt, prev_nodes, target: node_str[nxt]]
 
 # Criteria weights
 fn_weights = [0.4, 0.7]

@@ -25,8 +25,8 @@ class PreferredPath():
                 Current node
             - nxt : int
                 Next node
-            - prev : list
-                Path sequence so far (excluding 'source')
+            - prev_nodes : list
+                Path sequence so far (excluding 'loc')
             - target : int
                 Target node
         fn_weights : list
