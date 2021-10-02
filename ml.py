@@ -47,6 +47,7 @@ class BrainDataset():
             is_hub = brain.hubs(binary=True)
             neighbour_just_visited_node = brain.neighbour_just_visited_node
             leave_non_target_region = brain.leave_non_target_region
+            inter_regional_connections = brain.inter_regional_connections(weighted=False, distinct=True)
             fns = [
                 lambda loc, nxt, prev_nodes, target: streamlines[loc,nxt],
                 lambda loc, nxt, prev_nodes, target: node_str[nxt],
@@ -54,7 +55,8 @@ class BrainDataset():
                 lambda loc, nxt, prev_nodes, target: is_target_region(nxt, target),
                 lambda loc, nxt, prev_nodes, target: is_hub[nxt],
                 lambda loc, nxt, prev_nodes, target: neighbour_just_visited_node(nxt, prev_nodes),
-                lambda loc, nxt, prev_nodes, target: leave_non_target_region(loc, nxt, target)]
+                lambda loc, nxt, prev_nodes, target: leave_non_target_region(loc, nxt, target),
+                lambda loc, nxt, prev_nodes, target: inter_regional_connections[nxt]]
             weights = list(np.random.random(size=len(fns)))
             self.adj[i] = brain.sc_bin[triu_i]
             self.sp[i] = brain.shortest_paths()

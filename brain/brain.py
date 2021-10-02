@@ -476,6 +476,39 @@ class Brain():
       # Changing non-target region
       return int(r_loc != r_nxt)
 
+   def inter_regional_connections(self, weighted=True, distinct=False):
+      """
+      Returns how many inter-regional connections each node has
+
+      Parameters
+      ----------
+      weighted : bool
+          Whether or not to sum the weights of the streamlines of the inter-regional connections
+      distinct : bool
+          Whether to count the number of distinct inter-regional connections or the total number of inter-regional connections (only used if weighted=False)
+
+      Returns
+      -------
+      out : numpy.ndarray
+          How many inter-regional connections each node has
+      """
+
+      M = np.zeros(self.res)
+      for i in range(self.res):
+         r = self._regions[i]
+
+         # Only include where an edge to a different region exists
+         mask = np.where((self.sc_bin[i] > 0) & (self._regions != r))
+
+         if weighted:
+            M[i] = self.sc[i][mask].sum()
+         elif not distinct:
+            M[i] = self.sc_bin[i][mask].sum()
+         else:
+            M[i] = len(set(self._regions[mask]))
+
+      return M
+
 
    # Internal
 

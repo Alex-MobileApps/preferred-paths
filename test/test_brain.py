@@ -232,11 +232,7 @@ class TestBrain(Test):
 
     def test_leave_non_target_region(self):
         M = np.array(
-            [[0,1,1,1,1],
-             [1,0,1,1,1],
-             [1,1,0,1,1],
-             [1,1,1,0,1],
-             [1,1,1,1,0]])
+            [[0,1,1,1,1],[1,0,1,1,1],[1,1,0,1,1],[1,1,1,0,1],[1,1,1,1,0]])
         regions = np.array([0,1,1,1,2])
         brain = Brain(sc=M, fc=M, euc_dist=M, regions=regions)
         test = lambda brain, loc, nxt, target, exp: self.assertEqual(brain.leave_non_target_region(loc, nxt, target), exp)
@@ -244,6 +240,16 @@ class TestBrain(Test):
         test(brain, 1, 4, 3, False)
         test(brain, 1, 2, 4, False)
         test(brain, 1, 0, 4, True)
+
+    def test_inter_regional_nodes(self):
+        M = np.array([[0,2,0,0,0],[2,0,3,0,0],[0,3,0,4,5],[0,0,4,0,0],[0,0,5,0,0]])
+        regions = np.array([0,0,1,2,2])
+        brain = Brain(sc=M, fc=M, euc_dist=M, regions=regions)
+        test = lambda brain, weighted, distinct, exp: self.assert_float(brain.inter_regional_connections(weighted=weighted, distinct=distinct), exp)
+        test(brain, True, True,   np.array([0,3,12,4,5]))
+        test(brain, True, False,  np.array([0,3,12,4,5]))
+        test(brain, False, True,  np.array([0,1,2,1,1]))
+        test(brain, False, False, np.array([0,1,3,1,1]))
 
 if __name__ == '__main__':
     TestBrain.main()
