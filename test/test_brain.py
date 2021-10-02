@@ -251,5 +251,17 @@ class TestBrain(Test):
         test(brain, False, True,  np.array([0,1,2,1,1]))
         test(brain, False, False, np.array([0,1,3,1,1]))
 
+    def test_prev_visited_region(self):
+        M = np.array([[0,1,0,0,0,0,0],[1,0,1,0,0,0,0],[0,1,0,1,0,0,0],[0,0,1,0,1,1,0],[0,0,0,1,0,0,1],[0,0,0,1,0,0,1],[0,0,0,0,1,1,0]])
+        regions = np.array([0,1,2,3,2,3,3])
+        brain = Brain(sc=M, fc=M, euc_dist=M, regions=regions)
+        test = lambda brain, loc, nxt, prev, exp: self.assert_float(brain.prev_visited_region(loc=loc, nxt=nxt, prev_nodes=prev), exp)
+        test(brain, 0, 1, [], False)
+        test(brain, 3, 5, [], False)
+        test(brain, 3, 5, [2], False)
+        test(brain, 5, 3, [4,6], False)
+        test(brain, 3, 4, [0,1,2], True)
+        test(brain, 4, 3, [6], True)
+
 if __name__ == '__main__':
     TestBrain.main()

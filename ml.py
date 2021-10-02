@@ -48,6 +48,7 @@ class BrainDataset():
             neighbour_just_visited_node = brain.neighbour_just_visited_node
             leave_non_target_region = brain.leave_non_target_region
             inter_regional_connections = brain.inter_regional_connections(weighted=False, distinct=True)
+            prev_visited_region = brain.prev_visited_region
             fns = [
                 lambda loc, nxt, prev_nodes, target: streamlines[loc,nxt],
                 lambda loc, nxt, prev_nodes, target: node_str[nxt],
@@ -56,7 +57,8 @@ class BrainDataset():
                 lambda loc, nxt, prev_nodes, target: is_hub[nxt],
                 lambda loc, nxt, prev_nodes, target: neighbour_just_visited_node(nxt, prev_nodes),
                 lambda loc, nxt, prev_nodes, target: leave_non_target_region(loc, nxt, target),
-                lambda loc, nxt, prev_nodes, target: inter_regional_connections[nxt]]
+                lambda loc, nxt, prev_nodes, target: inter_regional_connections[nxt],
+                lambda loc, nxt, prev_nodes, target: prev_visited_region(loc, nxt, prev_nodes)]
             weights = list(np.random.random(size=len(fns)))
             self.adj[i] = brain.sc_bin[triu_i]
             self.sp[i] = brain.shortest_paths()
@@ -250,7 +252,7 @@ def sample_batch_fn(pp, sp, sample, sample_idx):
         while sp_val <= 0:
             s, t = sample_idx[np.random.choice(len_sample_idx)]
             sp_val = sp[s,t]
-        pred = pp.retrieve_single_path(s,t)
+        pred = PreferredPath._single_path_formatted(pp._fwd, s, t, False)
         rewards[i] = local_reward(pred, sp_val)
         success[i] = pred != -1
 

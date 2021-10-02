@@ -509,6 +509,33 @@ class Brain():
 
       return M
 
+   def prev_visited_region(self, loc, nxt, prev_nodes):
+      """
+      Returns whether or not the region of a potential next node has already been visited
+
+      Parameters
+      ----------
+      loc : int
+          Current node
+      nxt : int
+          Next node
+      prev_nodes : list
+          Path sequence (containing previously visited nodes)
+
+      Returns
+      -------
+      out : int
+          Whether or not the region of the potential next has already been visited (1 if already visited and not in the current region, 0 otherwise)
+      """
+
+      nxt_r = self._regions[nxt]
+      if nxt_r == self._regions[loc]:
+         return 0
+      for p in prev_nodes:
+         if nxt_r == self._regions[p]:
+            return 1
+      return 0
+
 
    # Internal
 
