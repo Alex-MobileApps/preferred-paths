@@ -48,9 +48,9 @@ def plot(plt_data, num_fns, plt_avg=None, plt_off=0, plt_subtitle='', figsize=(2
     x = np.arange(len_rewards) + 1
     fn_labs = [f'fn{j+1}' for j in range(num_fns)]
     def_plot = lambda ax, y, ylab, title, labels=None, avg=None: _cust_plot(ax, x, y, xlab='Batches', ylab=ylab, labels=labels, off=plt_off, title=f'{title}{plt_subtitle}', avg=avg)
-    def_plot(ax[0,0], plt_data['rewards'],   ylab='Global navigation efficiency ratio',  title='Rewards vs. batches',                                labels=['rewards'], avg=plt_avg)
+    def_plot(ax[0,0], plt_data['rewards'],   ylab='Navigation efficiency ratio',         title='Rewards vs. batches',                                labels=['rewards'], avg=plt_avg)
     def_plot(ax[0,1], plt_data['success'],   ylab='Success ratio',                       title='Success ratio vs. batches',                          labels=['success'], avg=plt_avg)
     def_plot(ax[1,0], plt_data['mu'],        ylab='Mu',                                  title='Mean criteria weight vs. batches',                   labels=fn_labs)
     def_plot(ax[1,1], plt_data['sig'],       ylab='Sigma',                               title='Standard deviation for criteria weight vs. batches', labels=fn_labs)
-    _cust_plot_pdf(ax[2,0], np.array(plt_data['mu'])[:,-1], np.array(plt_data['sig'])[:,-1], xlab='Weight', ylab='Density', labels=fn_labs,
+    _cust_plot_pdf(ax[2,0], np.array(plt_data['mu'])[:,-1], np.array(plt_data['sig'])[:,-1], xlab='Weight', ylab='Probability', labels=fn_labs,
         title=f"Probability density function for criteria weights{plt_subtitle}")
