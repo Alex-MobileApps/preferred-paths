@@ -230,5 +230,20 @@ class TestBrain(Test):
         test(brain, 3, [0,1], True)
         test(brain, 0, [2,3], False)
 
+    def test_leave_non_target_region(self):
+        M = np.array(
+            [[0,1,1,1,1],
+             [1,0,1,1,1],
+             [1,1,0,1,1],
+             [1,1,1,0,1],
+             [1,1,1,1,0]])
+        regions = np.array([0,1,1,1,2])
+        brain = Brain(sc=M, fc=M, euc_dist=M, regions=regions)
+        test = lambda brain, loc, nxt, target, exp: self.assertEqual(brain.leave_non_target_region(loc, nxt, target), exp)
+        test(brain, 1, 2, 3, True)
+        test(brain, 1, 4, 3, False)
+        test(brain, 1, 2, 4, False)
+        test(brain, 1, 0, 4, True)
+
 if __name__ == '__main__':
     TestBrain.main()

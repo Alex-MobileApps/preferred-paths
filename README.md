@@ -9,6 +9,7 @@ Requires installation of:
 - python 3
 - numpy
 - scipy
+- pytorch
 
 ## Setup
 
@@ -221,6 +222,22 @@ print(brain.neighbour_just_visited_node(nxt=1, prev_nodes=[4,5]))
 print(brain.neighbour_just_visited_node(nxt=6, prev_nodes=[4,5]))
 
 # 0
+```
+
+### Edges connecting different brain regions
+Returns whether or not a potential next node leaves the current region, if it is not already in the target region
+```
+print(brain.leave_non_target_region(loc=0, nxt=2, target=3))
+
+# 1
+
+print(brain.leave_non_target_region(loc=0, nxt=2, target=1))
+
+# 0
+
+print(brain.leave_non_target_region(loc=3, nxt=4, target=5))
+
+# 1
 ```
 
 ### Shortest paths

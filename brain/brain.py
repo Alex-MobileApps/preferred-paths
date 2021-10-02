@@ -443,6 +443,30 @@ class Brain():
          return 0
       return self.sc_bin[prev_nodes[-1], nxt]
 
+   def leave_non_target_region(self, loc, nxt, target):
+      """
+      Returns whether or not a potential next node leaves the current region, if it is not already in the target region
+
+      Returns
+      -------
+      out : int
+          1 if leaving a non-target region or remaining in the target region, 0 otherwise
+      """
+
+      # Moving to target region
+      r_nxt = self._regions[nxt]
+      r_target = self._regions[target]
+      if r_nxt == r_target:
+         return 1
+
+      # Leaving target region
+      r_loc = self._regions[loc]
+      if r_loc == r_target:
+         return 0
+
+      # Changing non-target region
+      return int(r_loc != r_nxt)
+
 
    # Internal
 
