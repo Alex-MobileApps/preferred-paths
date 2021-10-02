@@ -478,7 +478,7 @@ class Brain():
 
    def inter_regional_connections(self, weighted=True, distinct=False):
       """
-      Returns how many inter-regional connections each node has
+      Returns how many connections each node has to different regions
 
       Parameters
       ----------

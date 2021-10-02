@@ -240,6 +240,18 @@ print(brain.leave_non_target_region(loc=3, nxt=4, target=5))
 # 1
 ```
 
+### Inter-regional connections
+Returns how many connections each node has to different regions
+```
+print(brain.inter_regional_connections(weighted=True))
+
+# [ 0. 13. 12.  7.  0. 10. 14.  0.]
+
+print(brain.inter_regional_connections(weighted=False, distinct=True))
+
+# [0. 2. 3. 1. 0. 2. 2. 0.]
+```
+
 ### Shortest paths
 Lengths of the shortest paths between nodes
 ```
