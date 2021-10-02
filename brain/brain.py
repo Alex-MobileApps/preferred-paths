@@ -447,6 +447,15 @@ class Brain():
       """
       Returns whether or not a potential next node leaves the current region, if it is not already in the target region
 
+      Parameters
+      ----------
+      loc : int
+         Current node
+      nxt : int
+         Next node
+      target : int
+         Target node
+
       Returns
       -------
       out : int
