@@ -511,7 +511,7 @@ class Brain():
 
    def prev_visited_region(self, loc, nxt, prev_nodes):
       """
-      Returns whether or not the region of a potential next node has already been visited
+      Returns whether or not the region of a potential next node has already been visited, unless it remains in the same region
 
       Parameters
       ----------

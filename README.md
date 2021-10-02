@@ -252,6 +252,22 @@ print(brain.inter_regional_connections(weighted=False, distinct=True))
 # [0. 2. 3. 1. 0. 2. 2. 0.]
 ```
 
+### Previously visited regions
+Returns whether or not the region of a potential next node has already been visited, unless it remains in the same region
+```
+print(brain.prev_visited_region(loc=6, nxt=3, prev_nodes=[5,2]))
+
+# 1
+
+print(brain.prev_visited_region(loc=3, nxt=4, prev_nodes=[2,6]))
+
+# 0
+
+print(brain.prev_visited_region(loc=2, nxt=6, prev_nodes=[0,1]))
+
+# 0
+```
+
 ### Shortest paths
 Lengths of the shortest paths between nodes
 ```
