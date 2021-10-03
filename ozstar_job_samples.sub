@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=demo_ml
+#SBATCH --job-name=samples_cv
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
