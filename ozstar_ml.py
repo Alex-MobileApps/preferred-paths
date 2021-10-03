@@ -4,13 +4,12 @@ from scipy.io import loadmat
 from sklearn.model_selection import train_test_split
 from ml import BrainDataset, PolicyEstimator, reinforce
 from utils import device
-from sys import exit
 from argparse import ArgumentParser
 
 if __name__ == "__main__":
     # Input Parameters
     parser = ArgumentParser()
-    add = lambda arg, default, t: parser.add_argument(f'--{arg}', nargs='?', default=default, type=t)
+    add = lambda arg, default, t, const=None: parser.add_argument(f'--{arg}', nargs='?', const=const, default=default, type=t)
     add('res', 219, int)
     add('subj', 0, int)
     add('epoch', 1, int)
@@ -20,7 +19,7 @@ if __name__ == "__main__":
     add('lr', 0.005, float)
     add('save', None, str)
     add('load', None, str)
-    add('log', True, bool)
+    add('nolog', False, bool, const=True)
     args = vars(parser.parse_args())
 
     num_fns = 9
@@ -34,20 +33,16 @@ if __name__ == "__main__":
     lr = args['lr']
     save_path = args['save']
     load_path = args['load']
-    log = args['log']
+    log = not args['nolog']
 
-    # Confirm inputs before running
-    print('\n====================')
-    subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
-    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', sep='\n')
-    #value = input('Continue? (y/n): ')
-    #if value != '' and value.lower() != 'y':
-    #    exit()
-    print('====================')
+    if log:
+        print('\n====================')
+        subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
+        print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', sep='\n')
+        print('====================')
+        print('Reading files...')
 
     # Read brain data
-    print('Reading files...')
-
     sc = loadmat(f'/fred/oz192/data_n484/subjfiles_SC{res}.mat')
     fc = loadmat(f'/fred/oz192/data_n484/subjfiles_FC{res}.mat')
     sc = np.array([sc[f's{str(z+1).zfill(3)}'] for z in subj])
@@ -57,6 +52,7 @@ if __name__ == "__main__":
     regions = np.loadtxt(f'/fred/oz192/data_n484/regions_{res}.txt', dtype=np.int, delimiter=',')
 
     # Network parameters
+    if log: print("Creating network...")
     pe = PolicyEstimator(res, num_fns, hidden_units=hidden_units).to(device)
     opt = torch.optim.Adam(pe.network.parameters(), lr=lr)
 
@@ -77,11 +73,11 @@ if __name__ == "__main__":
         plt_data['train_idx'], plt_data['test_idx'] = train_test_split(subj, train_size=0.7) if len(subj) > 1 else (subj, [])
 
     # Train / test split
-    print('Loading brains...')
+    if log: print('Loading brains...')
     train_idx, test_idx = plt_data['train_idx'], plt_data['test_idx']
     train_data = BrainDataset(sc[train_idx], fc[train_idx], euc_dist, hubs, regions)
     test_data =  BrainDataset(sc[test_idx],  fc[test_idx],  euc_dist, hubs, regions)
-    print('====================')
+    if log: print('====================')
 
     # Reinforce and save after each epoch
     reinforce(pe, opt, train_data, epochs=epoch, batch=batch, sample=sample, lr=lr, plt_data=plt_data, save_path=save_path, log=log)
