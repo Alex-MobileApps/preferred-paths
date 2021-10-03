@@ -66,6 +66,7 @@ if __name__ == "__main__":
         # New
         plt_data = {
             'epochs': 0,
+            'epoch_seconds': [],
             'rewards': [],
             'success': [],
             'mu': [[] for _ in range(num_fns)],

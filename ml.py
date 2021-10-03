@@ -9,6 +9,7 @@ from torch.distributions import Normal
 #from IPython import display
 #from cust_plot import plot
 from utils import device
+from datetime import datetime
 
 class BrainDataset():
     def __init__(self, sc, fc, euc_dist, hubs, regions):
@@ -200,7 +201,6 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
         epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off, plt_avg, plt_subtitle, log)
 
         # Save
-        plt_data['epochs'] += 1
         if save_path:
             save(save_path, pe, opt, plt_data)
 
@@ -209,6 +209,7 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
 
 
 def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off, plt_avg, plt_subtitle, log):
+    t1 = datetime.now() # Track epoch duration
     offset = 0
     while offset + batch <= len(data):
         rewards = torch.zeros((batch,1), dtype=torch.float).to(device)
@@ -248,6 +249,11 @@ def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off,
 
         # Run next batch
         offset += batch
+
+    # Track epoch data
+    t2 = datetime.now()
+    plt_data['epoch_seconds'].append((t2-t1).seconds)
+    plt_data['epochs'] += 1
 
 
 def sample_batch_fn(pp, sp, sample, sample_idx):
