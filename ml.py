@@ -200,6 +200,9 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
         if save_path:
             save(save_path, pe, opt, plt_data)
 
+        if log:
+            print('\rDone')
+
 
 def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off, plt_avg, plt_subtitle, log):
     offset = 0
