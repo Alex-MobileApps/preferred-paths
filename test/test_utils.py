@@ -18,6 +18,26 @@ class TestUtils(Test):
         test('neg', np.array([1,1,1,1,0,0,0,0,0,0,0]))
         test('abs', np.array([1,1,1,1,0,0,0,1,1,1,1]))
 
+    def test_train_cv_test_split(self):
+        res = lambda n, train_pct, cv_pct: utils.train_cv_test_split(np.arange(n), train_pct, cv_pct)
+        test = lambda a, b: self.assertEqual(len(a), b)
+        a, b, c = res(100, 0.6, 0.2)
+        test(a, 60)
+        test(b, 20)
+        test(c, 20)
+        a, b, c = res(100, 0.7, 0.3)
+        test(a, 70)
+        test(b, 30)
+        test(c, 0)
+        a, b, c = res(1, 0.6, 0.3)
+        test(a, 1)
+        test(b, 0)
+        test(c, 0)
+        a, b, c = res(1, 0.3, 0.3)
+        test(a, 1)
+        test(b, 0)
+        test(c, 0)
+
     def test_validate_binary(self):
         fn = utils.validate_binary
         bin = np.array([[0,1],[1,0]])

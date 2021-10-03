@@ -61,6 +61,34 @@ def binarise_matrix(M, thresh_val, thresh_type='pos'):
 
     return M_bin
 
+def train_cv_test_split(M, train_pct, cv_pct):
+    """
+    Randomly splits an array of indices into three sets
+
+    Parameters
+    ----------
+    M : numpy.ndarray
+        Indices to split
+    train_pct : float
+        Percentage of indices for the training set
+    cv_pct : float
+        Percentage of indices for the cross validation set
+
+    Returns
+    -------
+    out : tuple
+        3 numpy arrays for the training, cross validation and test sets
+    """
+
+    np.random.shuffle(M)
+    len_M = len(M)
+    test_pct = 1 - train_pct - cv_pct
+    test_count = int(test_pct * len_M)
+    cv_count = int(cv_pct * len_M)
+    cv_end = len_M - test_count
+    train_end = cv_end - cv_count
+    return M[:train_end], M[train_end:cv_end], M[cv_end:]
+
 def upper_indices(n):
     """
     Returns the indices of the upper triangle of a matrix to use in loops

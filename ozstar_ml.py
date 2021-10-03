@@ -1,9 +1,8 @@
 import numpy as np
 import torch
 from scipy.io import loadmat
-from sklearn.model_selection import train_test_split
 from ml import BrainDataset, PolicyEstimator, reinforce
-from utils import device
+from utils import device, train_cv_test_split
 from argparse import ArgumentParser
 
 if __name__ == "__main__":
@@ -71,13 +70,12 @@ if __name__ == "__main__":
             'success': [],
             'mu': [[] for _ in range(num_fns)],
             'sig': [[] for _ in range(num_fns)]}
-        plt_data['train_idx'], plt_data['test_idx'] = train_test_split(subj, train_size=0.7) if len(subj) > 1 else (subj, [])
+        plt_data['train_idx'], plt_data['cv_idx'], plt_data['test_idx'] = train_cv_test_split(subj, train_pct=0.6, cv_pct=0.2)
 
     # Train / test split
     if log: print('Loading brains...')
-    train_idx, test_idx = plt_data['train_idx'], plt_data['test_idx']
+    train_idx = plt_data['train_idx']
     train_data = BrainDataset(sc[train_idx], fc[train_idx], euc_dist, hubs, regions)
-    test_data =  BrainDataset(sc[test_idx],  fc[test_idx],  euc_dist, hubs, regions)
     if log: print('====================')
 
     # Reinforce and save after each epoch
