@@ -1,4 +1,7 @@
+import torch
 import numpy as np
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def binarise_matrix(M, thresh_val, thresh_type='pos'):
     """

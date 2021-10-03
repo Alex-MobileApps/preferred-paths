@@ -1,13 +1,14 @@
 import numpy as np
 from brain import Brain
 from preferred_path import PreferredPath
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import torch
-from torch.nn import Sequential, Linear, ReLU
+from torch import tensor as T
+from torch.nn import Sequential, Linear, ReLU, Module
 from torch.distributions import Normal
-from IPython import display
-from cust_plot import plot
-
+#from IPython import display
+#from cust_plot import plot
+from utils import device
 
 class BrainDataset():
     def __init__(self, sc, fc, euc_dist, hubs, regions):
@@ -32,8 +33,8 @@ class BrainDataset():
         # Init vars
         triu = int(res * (res - 1) / 2)
         triu_i = np.triu_indices(res, 1)
-        self.adj = np.zeros((n, triu))
-        self.sp = np.zeros((n, res, res))
+        self.adj = torch.zeros((n, triu), dtype=torch.float).to(device)
+        self.sp = torch.zeros((n, res, res), dtype=torch.float).to(device)
         self.pp = [None] * n
         self.sample_idx = [None] * n
 
@@ -60,8 +61,8 @@ class BrainDataset():
                 lambda loc, nxt, prev_nodes, target: inter_regional_connections[nxt],
                 lambda loc, nxt, prev_nodes, target: prev_visited_region(loc, nxt, prev_nodes)]
             weights = list(np.random.random(size=len(fns)))
-            self.adj[i] = brain.sc_bin[triu_i]
-            self.sp[i] = brain.shortest_paths()
+            self.adj[i] = T(brain.sc_bin[triu_i].astype(np.int), dtype=torch.int).to(device)
+            self.sp[i] = T(brain.shortest_paths(), dtype=torch.float).to(device)
             self.pp[i] = PreferredPath(adj=brain.sc_bin, fn_vector=fns, fn_weights=weights)
             self.sample_idx[i] = np.column_stack(np.where(brain.fc_bin > 0))
 
@@ -72,7 +73,7 @@ class BrainDataset():
         return (self.adj[idx], self.sp[idx], self.pp[idx], self.sample_idx[idx])
 
 
-class PolicyEstimator():
+class PolicyEstimator(Module):
     def __init__(self, res, fn_len, hidden_units=20):
         """
         Parameters
@@ -85,6 +86,7 @@ class PolicyEstimator():
             Number of units in the hidden layer, by default 20
         """
 
+        super(PolicyEstimator, self).__init__()
         self.n_inputs = int(res * (res - 1) / 2)
         self.n_outputs = fn_len * 2 # includes both mean and sigma
         self.network = Sequential(
@@ -93,7 +95,7 @@ class PolicyEstimator():
             Linear(hidden_units, self.n_outputs))
 
     def predict(self, state):
-        return self.network(torch.FloatTensor(state))
+        return self.network(state)
 
 
 def global_reward(pred, sp):
@@ -114,8 +116,8 @@ def global_reward(pred, sp):
     """
 
     # Local navigation efficiency ratio
-    local = np.zeros(sp.size)
-    mask = np.where(pred != -1)
+    local = torch.zeros(sp.size, dtype=torch.float).to(device)
+    mask = torch.where(pred != -1).to(device)
     local[mask] = sp[mask] / pred[mask]
 
     # Global navigation efficiency ratio
@@ -191,12 +193,14 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
         g['lr'] = lr
 
     # Epoch
-    for e in range(epochs):
+    for _ in range(epochs):
         if log:
+            e = plt_data['epochs']
             print(f'\r-- Epoch {e+1} --')
         epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off, plt_avg, plt_subtitle, log)
 
         # Save
+        plt_data['epochs'] += 1
         if save_path:
             save(save_path, pe, opt, plt_data)
 
@@ -207,13 +211,13 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
 def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off, plt_avg, plt_subtitle, log):
     offset = 0
     while offset + batch <= len(data):
-        rewards = torch.zeros(batch,1)
-        success = np.zeros(batch)
+        rewards = torch.zeros((batch,1), dtype=torch.float).to(device)
+        success = torch.zeros(batch, dtype=torch.float).to(device)
         adj, sp, pp, sample_idx = data[offset:offset+batch]
         probs = pe.predict(adj)
         mu, sig = probs[:,:num_fns], abs(probs[:,num_fns:]) + 1
         N = Normal(mu, sig)
-        actions = N.sample()
+        actions = N.sample().to(device)
 
         # Batch
         for i in range(batch):
@@ -225,7 +229,7 @@ def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off,
         # Step
         step_fn(opt, N, actions, rewards)
 
-        # Plot data
+        # Update plotting data
         if plt_data is not None:
             # Add data to arrays
             plt_data['rewards'].append(rewards.mean().item())
@@ -234,20 +238,21 @@ def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off,
                 plt_data['mu'][j].append(mu[:,j].mean().item())
                 plt_data['sig'][j].append(sig[:,j].mean().item())
 
-            if plt_freq > 0:
-                len_rewards = len(plt_data['rewards'])
-                if (len_rewards + 1) % plt_freq == 0:
-                    plot(plt_data=plt_data, num_fns=num_fns, plt_avg=plt_avg, plt_off=plt_off, plt_subtitle=plt_subtitle)
-                    display.clear_output(wait=True)
-                    display.display(plt.gcf())
+            # Visualise
+            #if plt_freq > 0:
+            #    len_rewards = len(plt_data['rewards'])
+            #    if (len_rewards + 1) % plt_freq == 0:
+            #        plot(plt_data=plt_data, num_fns=num_fns, plt_avg=plt_avg, plt_off=plt_off, plt_subtitle=plt_subtitle)
+            #        display.clear_output(wait=True)
+            #        display.display(plt.gcf())
 
         # Run next batch
         offset += batch
 
 
 def sample_batch_fn(pp, sp, sample, sample_idx):
-    rewards = np.zeros(sample)
-    success = np.zeros(sample)
+    rewards = torch.zeros(sample, dtype=torch.float).to(device)
+    success = torch.zeros(sample, dtype=torch.float).to(device)
     len_sample_idx = len(sample_idx)
 
     for i in range(sample):
@@ -263,7 +268,7 @@ def sample_batch_fn(pp, sp, sample, sample_idx):
 
 
 def full_batch_fn(pp, sp):
-    mask = np.where(sp > 0)
+    mask = torch.where(sp > 0).to(device)
     pred = pp.retrieve_all_paths()[mask]
     rewards = global_reward(pred, sp[mask])
     success = 1 - (pred == -1).sum() / len(pred)

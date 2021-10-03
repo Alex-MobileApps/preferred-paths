@@ -28,7 +28,8 @@ def _cust_plot(ax, x, y, title=None, xlab=None, ylab=None, labels=None, off=0, a
 def _cust_plot_pdf(ax, mu, sig, title=None, xlab=None, ylab=None, labels=None):
     xmin = (mu - 3 * sig).min()
     xmax = (mu + 3 * sig).max()
-    x = np.arange(xmin, xmax, 0.001)
+    count = abs((xmax - xmin) / 1000)
+    x = np.arange(xmin, xmax, count)
     y = [norm.pdf(x, mu[i], sig[i]) for i in range(len(mu))]
     return _cust_plot(ax=ax, x=x, y=y, title=title, xlab=xlab, ylab=ylab, labels=labels)
 

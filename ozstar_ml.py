@@ -3,6 +3,7 @@ import torch
 from scipy.io import loadmat
 from sklearn.model_selection import train_test_split
 from ml import BrainDataset, PolicyEstimator, reinforce
+from utils import device
 from sys import exit
 from argparse import ArgumentParser
 
@@ -38,36 +39,37 @@ if __name__ == "__main__":
     # Confirm inputs before running
     print('\n====================')
     subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
-    print(f'Running with parameters:', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', sep='\n')
-    value = input('Continue? (y/n): ')
-    if value != '' and value.lower() != 'y':
-        exit()
+    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', sep='\n')
+    #value = input('Continue? (y/n): ')
+    #if value != '' and value.lower() != 'y':
+    #    exit()
     print('====================')
 
     # Read brain data
     print('Reading files...')
-    sc = loadmat(f'data/subjfiles_SC{res}.mat')
-    fc = loadmat(f'data/subjfiles_FC{res}.mat')
+
+    sc = loadmat(f'/fred/oz192/data_n484/subjfiles_SC{res}.mat')
+    fc = loadmat(f'/fred/oz192/data_n484/subjfiles_FC{res}.mat')
     sc = np.array([sc[f's{str(z+1).zfill(3)}'] for z in subj])
     fc = np.array([fc[f's{str(z+1).zfill(3)}'] for z in subj])
-    euc_dist = loadmat('data/euc_dist.mat')[f'eu{res}']
-    hubs = np.loadtxt(f'data/hubs_{res}.txt', dtype=np.int, delimiter=',')
-    regions = np.loadtxt(f'data/regions_{res}.txt', dtype=np.int, delimiter=',')
+    euc_dist = loadmat('/fred/oz192/euc_dist.mat')[f'eu{res}']
+    hubs = np.loadtxt(f'/fred/oz192/data_n484/hubs_{res}.txt', dtype=np.int, delimiter=',')
+    regions = np.loadtxt(f'/fred/oz192/data_n484/regions_{res}.txt', dtype=np.int, delimiter=',')
 
     # Network parameters
-    pe = PolicyEstimator(res, num_fns)
+    pe = PolicyEstimator(res, num_fns, hidden_units=hidden_units).to(device)
     opt = torch.optim.Adam(pe.network.parameters(), lr=lr)
 
     # Init new/load previous training data
     if load_path:
         # Load from checkpoint
-        checkpoint = torch.load(load_path)
-        plt_data = {k: checkpoint[k] for k in ('rewards','success','mu','sig','train_idx','test_idx')}
-        pe.network.load_state_dict(checkpoint['model_state_dict'])
-        opt.load_state_dict(checkpoint['optimizer_state_dict'])
+        plt_data = torch.load(load_path)
+        pe.network.load_state_dict(plt_data.pop('model_state_dict'))
+        opt.load_state_dict(plt_data.pop('optimizer_state_dict'))
     else:
         # New
         plt_data = {
+            'epochs': 0,
             'rewards': [],
             'success': [],
             'mu': [[] for _ in range(num_fns)],
