@@ -35,6 +35,7 @@ if __name__ == "__main__":
     num_fns = len(plt_data['mu'])
     num_train = len(plt_data['train_idx'])
     epochs = plt_data['epochs']
+    num_avg = int(num_train / batch)
 
     # Train data epoch rewards
     if log: print("Generating per epoch training rewards...")
@@ -42,10 +43,10 @@ if __name__ == "__main__":
     train_mu = np.zeros((num_fns, epochs))
     off = 0
     for i in range(epochs):
-        train_rewards[i] = sum(plt_data['rewards'][off:off+num_train]) / num_train
+        train_rewards[i] = sum(plt_data['rewards'][off:off+num_avg]) / num_avg
         for j in range(num_fns):
-            train_mu[j,i] = sum(plt_data['mu'][j][off:off+num_train]) / num_train
-        off += num_train
+            train_mu[j,i] = sum(plt_data['mu'][j][off:off+num_avg]) / num_avg
+        off += num_avg
 
     # Generate CV brains
     if log: print("Generating cv brains...")
