@@ -13,8 +13,8 @@ module load pytorch/1.7.1-python-3.8.5
 module load scipy/1.6.0-python-3.8.5
 module load scikit-learn/0.24.2-python-3.8.5
 
-python3 ./ozstar_ml.py --res 219 --batch 1 --sample 1 --load results/r219_su0_e10_b1_sa1_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa1_hu100_lr005.pt --nolog
-python3 ./ozstar_ml.py --res 219 --batch 1 --sample 10 --load results/r219_su0_e10_b1_sa10_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa10_hu100_lr005.pt --nolog
-python3 ./ozstar_ml.py --res 219 --batch 1 --sample 100 --load results/r219_su0_e10_b1_sa100_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa100_hu100_lr005.pt --nolog
-python3 ./ozstar_ml.py --res 219 --batch 1 --sample 1000 --load results/r219_su0_e10_b1_sa1000_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa1000_hu100_lr005.pt --nolog
-python3 ./ozstar_ml.py --res 219 --batch 1 --sample 10000 --load results/r219_su0_e10_b1_sa10000_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa10000_hu100_lr005.pt --nolog
+python3 ./ozstar_cv_ml.py --res 219 --batch 1 --sample 1 --load results/r219_su0_e10_b1_sa1_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa1_hu100_lr005.pt --nolog
+python3 ./ozstar_cv_ml.py --res 219 --batch 1 --sample 10 --load results/r219_su0_e10_b1_sa10_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa10_hu100_lr005.pt --nolog
+python3 ./ozstar_cv_ml.py --res 219 --batch 1 --sample 100 --load results/r219_su0_e10_b1_sa100_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa100_hu100_lr005.pt --nolog
+python3 ./ozstar_cv_ml.py --res 219 --batch 1 --sample 1000 --load results/r219_su0_e10_b1_sa1000_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa1000_hu100_lr005.pt --nolog
+python3 ./ozstar_cv_ml.py --res 219 --batch 1 --sample 10000 --load results/r219_su0_e10_b1_sa10000_hu100_lr005.pt --save results/cv_r219_su0_e10_b1_sa10000_hu100_lr005.pt --nolog
