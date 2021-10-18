@@ -197,14 +197,15 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
 
     # Epoch
     for _ in range(epochs):
+        e = plt_data['epochs'] + 1
         if log:
             e = plt_data['epochs']
-            print(f'\r-- Epoch {e+1} --')
+            print(f'\r-- Epoch {e} --')
         epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off, plt_avg, plt_subtitle, log)
 
         # Save
         if save_path:
-            if (e+1) % save_freq == 0:
+            if e % save_freq == 0:
                 save(save_path, pe, opt, plt_data)
 
         if log:
