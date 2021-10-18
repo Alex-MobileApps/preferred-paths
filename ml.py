@@ -205,7 +205,6 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
         # Save
         if save_path:
             if (e+1) % save_freq == 0:
-                print('Saving')
                 save(save_path, pe, opt, plt_data)
 
         if log:

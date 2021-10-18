@@ -12,12 +12,13 @@ if __name__ == "__main__":
     add('res', 219, int)
     add('subj', 0, int)
     add('epoch', 1, int)
-    add('batch', 1, int)
-    add('sample', 0, int)
-    add('hu', 2000, int)
-    add('lr', 0.005, float)
+    add('batch', 4, int)
+    add('sample', 100, int)
+    add('hu', 100, int)
+    add('lr', 0.001, float)
     add('save', None, str)
     add('load', None, str)
+    add('savefreq', 1, int)
     add('nolog', False, bool, const=True)
     args = vars(parser.parse_args())
 
@@ -32,6 +33,7 @@ if __name__ == "__main__":
     lr = args['lr']
     save_path = args['save']
     load_path = args['load']
+    save_freq = args['savefreq']
     log = not args['nolog']
 
     if log:
@@ -79,4 +81,4 @@ if __name__ == "__main__":
     if log: print('====================')
 
     # Reinforce and save after each epoch
-    reinforce(pe, opt, train_data, epochs=epoch, batch=batch, sample=sample, lr=lr, plt_data=plt_data, save_path=save_path, log=log)
+    reinforce(pe, opt, train_data, epochs=epoch, batch=batch, sample=sample, lr=lr, plt_data=plt_data, save_path=save_path, save_freq=save_freq, log=log)
