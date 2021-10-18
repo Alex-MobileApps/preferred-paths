@@ -147,7 +147,7 @@ def local_reward(pred, sp):
     return 0
 
 
-def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_freq=0, plt_off=0, plt_avg=None, save_path=None, log=False):
+def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_freq=0, plt_off=0, plt_avg=None, save_path=None, save_freq=1, log=False):
     """
     Runs the continuous policy gradient reinforce algorithm
 
@@ -179,6 +179,8 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
         Number of batches to average for the moving average lines in the plots (0 to not include moving average lines)
     save_path : str
         Location to save the state of the neural network and optimiser as well as plt_data
+    save_freq : int
+        Number of epochs to complete before each save operation (only used when save_path is set)
     log : bool
         Whether or not to continuously print the current epoch and batch
     """
@@ -202,7 +204,9 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
 
         # Save
         if save_path:
-            save(save_path, pe, opt, plt_data)
+            if (e+1) % save_freq == 0:
+                print('Saving')
+                save(save_path, pe, opt, plt_data)
 
         if log:
             print('\rDone')

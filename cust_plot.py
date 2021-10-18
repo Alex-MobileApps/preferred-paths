@@ -48,6 +48,7 @@ def plot(plt_data, num_fns, plt_avg=None, plt_off=0, plt_subtitle='', figsize=(2
     len_rewards = len(plt_data['rewards'])
     x = np.arange(len_rewards) + 1
     fn_labs = [f'fn{j+1}' for j in range(num_fns)]
+    #fn_labs = ['streamlines','node strength', 'target node', 'target region', 'hub', 'neighbour of just visited node', 'edge connecting different region', 'inter regional connections', 'prev visited region']
     def_plot = lambda ax, y, ylab, title, labels=None, avg=None: _cust_plot(ax, x, y, xlab='Batches', ylab=ylab, labels=labels, off=plt_off, title=f'{title}{plt_subtitle}', avg=avg)
     def_plot(ax[0,0], plt_data['rewards'],   ylab='Navigation efficiency ratio',         title='Rewards vs. batches',                                labels=['rewards'], avg=plt_avg)
     def_plot(ax[0,1], plt_data['success'],   ylab='Success ratio',                       title='Success ratio vs. batches',                          labels=['success'], avg=plt_avg)
