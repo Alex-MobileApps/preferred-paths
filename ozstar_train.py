@@ -77,6 +77,7 @@ if __name__ == "__main__":
     # Train / test split
     if log: print('Loading brains...')
     train_idx = plt_data['train_idx']
+    if len(train_idx) == 1: train_idx = [0]
     train_data = BrainDataset(sc[train_idx], fc[train_idx], euc_dist, hubs, regions)
     if log: print('====================')
 
