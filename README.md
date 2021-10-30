@@ -65,7 +65,9 @@ hubs = [1, 4, 5]
 
 regions = [0, 0, 1, 2, 2, 2, 3, 4]
 
-brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=1, fc_thresh=0.01, hubs=hubs, regions=regions)
+func_regions = [0, 0, 0, 1, 1, 2, 2, 2]
+
+brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=1, fc_thresh=0.01, hubs=hubs, regions=regions, func_regions=func_regions)
 ```
 
 ### Streamlines
@@ -227,15 +229,15 @@ print(brain.neighbour_just_visited_node(nxt=6, prev_nodes=[4,5]))
 ### Edges connecting different brain regions
 Returns whether or not a potential next node leaves the current region, if it is not already in the target region
 ```
-print(brain.leave_non_target_region(loc=0, nxt=2, target=3))
+print(brain.edge_con_diff_region(loc=0, nxt=2, target=3))
 
 # 1
 
-print(brain.leave_non_target_region(loc=0, nxt=2, target=1))
+print(brain.edge_con_diff_region(loc=0, nxt=2, target=1))
 
 # 0
 
-print(brain.leave_non_target_region(loc=3, nxt=4, target=5))
+print(brain.edge_con_diff_region(loc=3, nxt=4, target=5))
 
 # 1
 ```
@@ -264,6 +266,50 @@ print(brain.prev_visited_region(loc=3, nxt=4, prev_nodes=[2,6]))
 # 0
 
 print(brain.prev_visited_region(loc=2, nxt=6, prev_nodes=[0,1]))
+
+# 0
+```
+
+### Is target functional region
+Returns whether or not a potential next node is in the target node's functional region
+```
+print(brain.is_target_func_region(nxt=5, target=7))
+
+# 1
+
+print(brain.is_target_func_region(nxt=1, target=7))
+
+# 0
+```
+
+### Edges connecting different brain functional regions
+Returns whether or not a potential next node leaves the current functional region, if it is not already in the target functional region
+```
+print(brain.edge_con_diff_func_region(loc=0, nxt=3, target=5))
+
+# 1
+
+print(brain.edge_con_diff_func_region(loc=0, nxt=3, target=1))
+
+# 0
+
+print(brain.edge_con_diff_func_region(loc=0, nxt=1, target=2))
+
+# 1
+```
+
+### Previously visited functional regions
+Returns whether or not the functional region of a potential next node has already been visited, unless it remains in the same functional region
+```
+print(brain.prev_visited_func_region(loc=6, nxt=2, prev_nodes=[3,0]))
+
+# 1
+
+print(brain.prev_visited_func_region(loc=1, nxt=2, prev_nodes=[3,5]))
+
+# 0
+
+print(brain.prev_visited_func_region(loc=3, nxt=6, prev_nodes=[0,1]))
 
 # 0
 ```
