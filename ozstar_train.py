@@ -24,7 +24,7 @@ if __name__ == "__main__":
     add('pathmethod', PreferredPath._DEF_METHOD, str)
     args = vars(parser.parse_args())
 
-    num_fns = 9
+    num_fns = 12
     res = args['res']
     subj = args['subj']
     subj = list(range(484)) if subj == 0 else [subj-1]
