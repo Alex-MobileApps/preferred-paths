@@ -171,7 +171,7 @@ def local_reward(pred, sp):
     return 0
 
 
-def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, save_path=None, save_freq=1, log=False):
+def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, save_path=None, save_freq=1, log=False, path_method=PreferredPath._DEF_METHOD):
     """
     Runs the continuous policy gradient reinforce algorithm
 
@@ -201,6 +201,10 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, save_pa
         Number of epochs to complete before each save operation (only used when save_path is set)
     log : bool
         Whether or not to continuously print the current epoch and batch
+    path_method : str
+        'rev'  : Revisits allowed. If a revisit occurs, that the path sequence equals 'None' due to entering an infinite loop
+        'fwd'  : Forward only, nodes cannot be revisited and backtracking isn't allowed
+        'back' : Backtracking allowed, nodes cannot be revisited and backtracking to previous nodes occur at dead ends to find alternate routes
     """
 
     # Setup
@@ -215,7 +219,7 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, save_pa
         e = plt_data['epochs'] + 1
         if log:
             print(f'\r-- Epoch {e} --')
-        epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log)
+        epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log, path_method)
 
         # Save
         if save_path:
@@ -226,7 +230,7 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, save_pa
             print('\rDone')
 
 
-def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log):
+def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log, path_method):
     t1 = datetime.now() # Track epoch duration
     offset = 0
     while offset + batch <= len(data):
@@ -243,7 +247,7 @@ def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log):
             if log:
                 print(f'\r{str(i+1+offset)}', end='')
             pp[i].fn_weights = actions[i].tolist()
-            rewards[i], success[i] = sample_batch_fn(pp[i], sp[i], sample, sample_idx[i]) if sample > 0 else full_batch_fn(pp[i], sp[i])
+            rewards[i], success[i] = sample_batch_fn(pp[i], sp[i], sample, sample_idx[i], path_method) if sample > 0 else full_batch_fn(pp[i], sp[i], path_method)
 
         # Step
         step_fn(opt, N, actions, rewards)
@@ -265,26 +269,28 @@ def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log):
     plt_data['epochs'] += 1
 
 
-def sample_batch_fn(pp, sp, sample, sample_idx):
+def sample_batch_fn(pp, sp, sample, sample_idx, path_method):
     rewards = torch.zeros(sample, dtype=torch.float).to(device)
     success = torch.zeros(sample, dtype=torch.float).to(device)
     len_sample_idx = len(sample_idx)
+    print(path_method)
+    path_method = pp._convert_method_to_fn(path_method)
 
     for i in range(sample):
         sp_val = 0
         while sp_val <= 0:
             s, t = sample_idx[np.random.choice(len_sample_idx)]
             sp_val = sp[s,t]
-        pred = PreferredPath._single_path_formatted(pp._fwd, s, t, False)
+        pred = PreferredPath._single_path_formatted(path_method, s, t, False)
         rewards[i] = local_reward(pred, sp_val)
         success[i] = pred != -1
 
     return rewards.mean(), success.mean()
 
 
-def full_batch_fn(pp, sp):
+def full_batch_fn(pp, sp, path_method):
     mask = torch.where(sp > 0).to(device)
-    pred = pp.retrieve_all_paths()[mask]
+    pred = pp.retrieve_all_paths(method=path_method)[mask]
     rewards = global_reward(pred, sp[mask])
     success = 1 - (pred == -1).sum() / len(pred)
     return rewards, success
