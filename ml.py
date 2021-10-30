@@ -273,7 +273,6 @@ def sample_batch_fn(pp, sp, sample, sample_idx, path_method):
     rewards = torch.zeros(sample, dtype=torch.float).to(device)
     success = torch.zeros(sample, dtype=torch.float).to(device)
     len_sample_idx = len(sample_idx)
-    print(path_method)
     path_method = pp._convert_method_to_fn(path_method)
 
     for i in range(sample):
