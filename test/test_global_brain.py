@@ -36,4 +36,10 @@ class TestGlobalBrain(Test):
              [ 0.6, inf, 1.8, inf],
              [ inf,-1.8, inf,   1],
              [-2.2, inf,  -1, inf]]])
-        self.assert_float(brain.closest_to_target(), exp)
+
+        test = lambda loc, nxt, target: self.assert_float(brain.closest_to_target(loc, nxt, target), exp[target,loc,nxt])
+        for loc in range(4):
+            for nxt in range(4):
+                for target in range(4):
+                    test(loc, nxt, target)
+        #self.assert_float(brain.closest_to_target(), exp)

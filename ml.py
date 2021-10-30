@@ -93,8 +93,8 @@ class BrainDataset():
             vals = brain.prev_visited_func_region
             return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, prev_nodes)
         if name == 'closest_to_target':
-            vals = brain.closest_to_target()
-            return lambda loc, nxt, prev_nodes, target: vals[target, loc, nxt]
+            vals = brain.closest_to_target
+            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, target)
         raise ValueError(f'{name} is an invalid function')
 
     def __len__(self):
