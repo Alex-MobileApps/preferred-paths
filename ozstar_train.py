@@ -4,6 +4,7 @@ from scipy.io import loadmat
 from ml import BrainDataset, PolicyEstimator, reinforce
 from utils import device, train_cv_test_split
 from argparse import ArgumentParser
+from preferred_path import PreferredPath
 
 if __name__ == "__main__":
     # Input Parameters
@@ -20,6 +21,7 @@ if __name__ == "__main__":
     add('load', None, str)
     add('savefreq', 1, int)
     add('nolog', False, bool, const=True)
+    add('pathmethod', PreferredPath._DEF_METHOD, str)
     args = vars(parser.parse_args())
 
     num_fns = 9
@@ -35,11 +37,12 @@ if __name__ == "__main__":
     load_path = args['load']
     save_freq = args['savefreq']
     log = not args['nolog']
+    path_method = args['pathmethod']
 
     if log:
         print('\n====================')
         subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
-        print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', sep='\n')
+        print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', f'path_method = {path_method}', sep='\n')
         print('====================')
         print('Reading files...')
 
@@ -83,4 +86,4 @@ if __name__ == "__main__":
     if log: print('====================')
 
     # Reinforce and save after each epoch
-    reinforce(pe, opt, train_data, epochs=epoch, batch=batch, sample=sample, lr=lr, plt_data=plt_data, save_path=save_path, save_freq=save_freq, log=log)
+    reinforce(pe, opt, train_data, epochs=epoch, batch=batch, sample=sample, lr=lr, plt_data=plt_data, save_path=save_path, save_freq=save_freq, log=log, path_method=path_method)
