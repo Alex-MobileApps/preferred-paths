@@ -16,7 +16,9 @@ def _cust_plot(ax, x, y, title=None, xlab=None, ylab=None, labels=None, off=0, a
         yi = gety(i)[off:]
         xi = getx(i)[off:]
         label = labels[i] if labels else None
-        ax.plot(xi, yi, label=label)
+        lines = ax.plot(xi, yi, label=label)
+        if i >= 10:
+            lines[0].set_linestyle('dashed')
         if avg:
              x_avg, y_avg = move_avg(yi, avg)
              ax.plot(x_avg + xi[0], y_avg, label=f'{label} {avg} point avg')
@@ -43,12 +45,11 @@ def move_avg(y, p):
     return x_avg, y_avg
 
 
-def plot(plt_data, num_fns, plt_avg=None, plt_off=0, plt_subtitle='', figsize=(20,24)):
+def plot(plt_data, plt_avg=None, plt_off=0, plt_subtitle='', figsize=(20,24)):
     _, ax = plt.subplots(nrows=3, ncols=2, figsize=figsize, facecolor='w')
     len_rewards = len(plt_data['rewards'])
     x = np.arange(len_rewards) + 1
-    fn_labs = [f'fn{j+1}' for j in range(num_fns)]
-    #fn_labs = ['streamlines','node strength', 'target node', 'target region', 'hub', 'neighbour of just visited node', 'edge connecting different region', 'inter regional connections', 'prev visited region', 'target func region', 'edge connecting different func region', 'prev visited func region']
+    fn_labs = plt_data['fns']
     def_plot = lambda ax, y, ylab, title, labels=None, avg=None: _cust_plot(ax, x, y, xlab='Batches', ylab=ylab, labels=labels, off=plt_off, title=f'{title}{plt_subtitle}', avg=avg)
     def_plot(ax[0,0], plt_data['rewards'],   ylab='Navigation efficiency ratio',         title='Rewards vs. batches',                                labels=['rewards'], avg=plt_avg)
     def_plot(ax[0,1], plt_data['success'],   ylab='Success ratio',                       title='Success ratio vs. batches',                          labels=['success'], avg=plt_avg)

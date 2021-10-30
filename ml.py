@@ -9,7 +9,7 @@ from utils import device
 from datetime import datetime
 
 class BrainDataset():
-    def __init__(self, sc, fc, euc_dist, hubs, regions, func_regions):
+    def __init__(self, sc, fc, euc_dist, hubs, regions, func_regions, fns):
         """
         Parameters
         ----------
@@ -25,10 +25,14 @@ class BrainDataset():
             Array with the region number each node is assigned to
         func_regions : numpy.ndarray
             Array with the functional region number each node is assigned to
+        fns : list
+            List of strings with the function name to use for ML. Valid functions include:
+            'streamlines', 'node_str', 'target_node', 'target_region', 'hub', 'neighbour_just_visited_node', 'edge_con_diff_region', 'inter_regional_connections', 'prev_visited_region', 'target_func_region', 'edge_con_diff_func_region', 'prev_visited_func_region'
         """
 
         n = len(sc)
         res = len(euc_dist)
+        num_fns = len(fns)
 
         # Init vars
         triu = int(res * (res - 1) / 2)
@@ -38,58 +42,60 @@ class BrainDataset():
         self.pp = [None] * n
         self.sample_idx = [None] * n
 
-        streamlines = [None] * n
-        node_str = [None] * n
-        is_target_node = [None] * n
-        is_target_region = [None] * n
-        is_hub = [None] * n
-        neighbour_just_visited_node = [None] * n
-        edge_con_diff_region = [None] * n
-        inter_regional_connections = [None] * n
-        prev_visited_region = [None] * n
-        is_target_func_region = [None] * n
-        edge_con_diff_func_region = [None] * n
-        prev_visited_func_region = [None] * n
-        #closest_to_target = [None] * n
-
         # Fill vars
         for i in range(n):
             brain = GlobalBrain(sc[i], fc[i], euc_dist, hubs=hubs, regions=regions, func_regions=func_regions)
-            streamlines[i] = brain.streamlines()
-            node_str[i] = brain.node_strength(weighted=True)
-            is_target_node[i] = brain.is_target_node
-            is_target_region[i] = brain.is_target_region
-            is_hub[i] = brain.hubs(binary=True)
-            neighbour_just_visited_node[i] = brain.neighbour_just_visited_node
-            edge_con_diff_region[i] = brain.edge_con_diff_region
-            inter_regional_connections[i] = brain.inter_regional_connections(weighted=False, distinct=True)
-            prev_visited_region[i] = brain.prev_visited_region
-            is_target_func_region[i] = brain.is_target_func_region
-            edge_con_diff_func_region[i] = brain.edge_con_diff_func_region
-            prev_visited_func_region[i] = brain.prev_visited_func_region
-            #closest_to_target[i] = brain.closest_to_target()
-
-            fns = [
-                # i=i used to prevent overwriting references in loop
-                lambda loc, nxt, prev_nodes, target, i=i: streamlines[i][loc,nxt],
-                lambda loc, nxt, prev_nodes, target, i=i: node_str[i][nxt],
-                lambda loc, nxt, prev_nodes, target, i=i: is_target_node[i](nxt, target),
-                lambda loc, nxt, prev_nodes, target, i=i: is_target_region[i](nxt, target),
-                lambda loc, nxt, prev_nodes, target, i=i: is_hub[i][nxt],
-                lambda loc, nxt, prev_nodes, target, i=i: neighbour_just_visited_node[i](nxt, prev_nodes),
-                lambda loc, nxt, prev_nodes, target, i=i: edge_con_diff_region[i](loc, nxt, target),
-                lambda loc, nxt, prev_nodes, target, i=i: inter_regional_connections[i][nxt],
-                lambda loc, nxt, prev_nodes, target, i=i: prev_visited_region[i](loc, nxt, prev_nodes),
-                lambda loc, nxt, prev_nodes, target, i=i: is_target_func_region[i](nxt, target),
-                lambda loc, nxt, prev_nodes, target, i=i: edge_con_diff_func_region[i](loc, nxt, target),
-                lambda loc, nxt, prev_nodes, target, i=i: prev_visited_func_region[i](loc, nxt, prev_nodes),
-                #lambda loc, nxt, prev_nodes, target, i=i: closest_to_target[i][target, loc, nxt],
-            ]
-            weights = list(np.random.random(size=len(fns)))
+            fn_vector = [None] * num_fns
+            for j, name in enumerate(fns):
+                fn_vector[j] = BrainDataset.fn_mapper(name, brain)
+            weights = list(np.random.random(size=num_fns))
             self.adj[i] = T(brain.sc_bin[triu_i].astype(np.int), dtype=torch.int).to(device)
             self.sp[i] = T(brain.shortest_paths(), dtype=torch.float).to(device)
-            self.pp[i] = PreferredPath(adj=brain.sc_bin, fn_vector=fns, fn_weights=weights)
+            self.pp[i] = PreferredPath(adj=brain.sc_bin, fn_vector=fn_vector, fn_weights=weights)
             self.sample_idx[i] = np.column_stack(np.where(brain.fc_bin > 0))
+
+    @staticmethod
+    def fn_mapper(name, brain):
+        if name == 'streamlines':
+            vals = brain.streamlines()
+            return lambda loc, nxt, prev_nodes, target: vals[loc,nxt]
+        if name == 'node_str':
+            vals = brain.node_strength(weighted=True)
+            return lambda loc, nxt, prev_nodes, target: vals[nxt]
+        if name == 'target_node':
+            vals = brain.is_target_node
+            return lambda loc, nxt, prev_nodes, target: vals(nxt, target)
+        if name == 'target_region':
+            vals = brain.is_target_region
+            return lambda loc, nxt, prev_nodes, target: vals(nxt, target)
+        if name == 'hub':
+            vals = brain.hubs(binary=True)
+            return lambda loc, nxt, prev_nodes, target: vals[nxt]
+        if name == 'neighbour_just_visited_node':
+            vals = brain.neighbour_just_visited_node
+            return lambda loc, nxt, prev_nodes, target: vals(nxt, prev_nodes)
+        if name == 'edge_con_diff_region':
+            vals = brain.edge_con_diff_region
+            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, target)
+        if name == 'inter_regional_connections':
+            vals = brain.inter_regional_connections(weighted=False, distinct=True)
+            return lambda loc, nxt, prev_nodes, target: vals[nxt]
+        if name == 'prev_visited_region':
+            vals = brain.prev_visited_region
+            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, prev_nodes)
+        if name == 'target_func_region':
+            vals = brain.is_target_func_region
+            return lambda loc, nxt, prev_nodes, target: vals(nxt, target)
+        if name == 'edge_con_diff_func_region':
+            vals = brain.edge_con_diff_func_region
+            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, target)
+        if name == 'prev_visited_func_region':
+            vals = brain.prev_visited_func_region
+            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, prev_nodes)
+        if name == 'closest_to_target':
+            vals = brain.closest_to_target()
+            return lambda loc, nxt, prev_nodes, target: vals[target, loc, nxt]
+        raise ValueError(f'{name} is an invalid function')
 
     def __len__(self):
         return len(self.adj)
