@@ -1,13 +1,10 @@
 import numpy as np
-from brain import Brain
+from brain import Brain, GlobalBrain
 from preferred_path import PreferredPath
-#import matplotlib.pyplot as plt
 import torch
 from torch import tensor as T
 from torch.nn import Sequential, Linear, ReLU, Module
 from torch.distributions import Normal
-#from IPython import display
-#from cust_plot import plot
 from utils import device
 from datetime import datetime
 
@@ -39,28 +36,43 @@ class BrainDataset():
         self.pp = [None] * n
         self.sample_idx = [None] * n
 
+        streamlines = [None] * n
+        node_str = [None] * n
+        is_target_node = [None] * n
+        is_target_region = [None] * n
+        is_hub = [None] * n
+        neighbour_just_visited_node = [None] * n
+        leave_non_target_region = [None] * n
+        inter_regional_connections = [None] * n
+        prev_visited_region = [None] * n
+        #closest_to_target = [None] * n
+
         # Fill vars
         for i in range(n):
-            brain = Brain(sc[i], fc[i], euc_dist, hubs=hubs, regions=regions)
-            streamlines = brain.streamlines()
-            node_str = brain.node_strength(weighted=True)
-            is_target_node = brain.is_target_node
-            is_target_region = brain.is_target_region
-            is_hub = brain.hubs(binary=True)
-            neighbour_just_visited_node = brain.neighbour_just_visited_node
-            leave_non_target_region = brain.leave_non_target_region
-            inter_regional_connections = brain.inter_regional_connections(weighted=False, distinct=True)
-            prev_visited_region = brain.prev_visited_region
+            brain = GlobalBrain(sc[i], fc[i], euc_dist, hubs=hubs, regions=regions)
+            streamlines[i] = brain.streamlines()
+            node_str[i] = brain.node_strength(weighted=True)
+            is_target_node[i] = brain.is_target_node
+            is_target_region[i] = brain.is_target_region
+            is_hub[i] = brain.hubs(binary=True)
+            neighbour_just_visited_node[i] = brain.neighbour_just_visited_node
+            leave_non_target_region[i] = brain.leave_non_target_region
+            inter_regional_connections[i] = brain.inter_regional_connections(weighted=False, distinct=True)
+            prev_visited_region[i] = brain.prev_visited_region
+            #closest_to_target[i] = brain.closest_to_target()
             fns = [
-                lambda loc, nxt, prev_nodes, target: streamlines[loc,nxt],
-                lambda loc, nxt, prev_nodes, target: node_str[nxt],
-                lambda loc, nxt, prev_nodes, target: is_target_node(nxt, target),
-                lambda loc, nxt, prev_nodes, target: is_target_region(nxt, target),
-                lambda loc, nxt, prev_nodes, target: is_hub[nxt],
-                lambda loc, nxt, prev_nodes, target: neighbour_just_visited_node(nxt, prev_nodes),
-                lambda loc, nxt, prev_nodes, target: leave_non_target_region(loc, nxt, target),
-                lambda loc, nxt, prev_nodes, target: inter_regional_connections[nxt],
-                lambda loc, nxt, prev_nodes, target: prev_visited_region(loc, nxt, prev_nodes)]
+                # i=i used to prevent overwriting references in loop
+                lambda loc, nxt, prev_nodes, target, i=i: streamlines[i][loc,nxt],
+                lambda loc, nxt, prev_nodes, target, i=i: node_str[i][nxt],
+                lambda loc, nxt, prev_nodes, target, i=i: is_target_node[i](nxt, target),
+                lambda loc, nxt, prev_nodes, target, i=i: is_target_region[i](nxt, target),
+                lambda loc, nxt, prev_nodes, target, i=i: is_hub[i][nxt],
+                lambda loc, nxt, prev_nodes, target, i=i: neighbour_just_visited_node[i](nxt, prev_nodes),
+                lambda loc, nxt, prev_nodes, target, i=i: leave_non_target_region[i](loc, nxt, target),
+                lambda loc, nxt, prev_nodes, target, i=i: inter_regional_connections[i][nxt],
+                lambda loc, nxt, prev_nodes, target, i=i: prev_visited_region[i](loc, nxt, prev_nodes),
+                #lambda loc, nxt, prev_nodes, target, i=i: closest_to_target[i][target, loc, nxt],
+            ]
             weights = list(np.random.random(size=len(fns)))
             self.adj[i] = T(brain.sc_bin[triu_i].astype(np.int), dtype=torch.int).to(device)
             self.sp[i] = T(brain.shortest_paths(), dtype=torch.float).to(device)
@@ -147,7 +159,7 @@ def local_reward(pred, sp):
     return 0
 
 
-def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_freq=0, plt_off=0, plt_avg=None, save_path=None, save_freq=1, log=False):
+def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, save_path=None, save_freq=1, log=False):
     """
     Runs the continuous policy gradient reinforce algorithm
 
@@ -171,12 +183,6 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
         Dictionary to store data as the network progresses.
         Requires the keys: 'rewards', 'success', 'mu' and 'sig' with values being a list.
         The values for 'mu' and 'sig' should be a 2D list, with a row for each criteria in the model
-    plt_freq : int
-        How often to draw a plot of the model's progress
-    plt_off : int
-        Number of batches along the x-axis to offset when drawing the plots
-    plt_avg : int
-        Number of batches to average for the moving average lines in the plots (0 to not include moving average lines)
     save_path : str
         Location to save the state of the neural network and optimiser as well as plt_data
     save_freq : int
@@ -186,10 +192,7 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
     """
 
     # Setup
-    len_data = len(data)
     num_fns = data.pp[0].fn_length
-    res = len(data.sp[0])
-    plt_subtitle = f'\n(n={len_data}, res={res}, batch size={batch}, samples={"full" if sample == 0 else sample})'
 
     # Update learning rate
     for g in opt.param_groups:
@@ -200,7 +203,7 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
         e = plt_data['epochs'] + 1
         if log:
             print(f'\r-- Epoch {e} --')
-        epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off, plt_avg, plt_subtitle, log)
+        epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log)
 
         # Save
         if save_path:
@@ -211,7 +214,7 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, plt_fre
             print('\rDone')
 
 
-def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off, plt_avg, plt_subtitle, log):
+def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log):
     t1 = datetime.now() # Track epoch duration
     offset = 0
     while offset + batch <= len(data):
@@ -235,20 +238,11 @@ def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, plt_freq, plt_off,
 
         # Update plotting data
         if plt_data is not None:
-            # Add data to arrays
             plt_data['rewards'].append(rewards.mean().item())
             plt_data['success'].append(success.mean())
             for j in range(num_fns):
                 plt_data['mu'][j].append(mu[:,j].mean().item())
                 plt_data['sig'][j].append(sig[:,j].mean().item())
-
-            # Visualise
-            #if plt_freq > 0:
-            #    len_rewards = len(plt_data['rewards'])
-            #    if (len_rewards + 1) % plt_freq == 0:
-            #        plot(plt_data=plt_data, num_fns=num_fns, plt_avg=plt_avg, plt_off=plt_off, plt_subtitle=plt_subtitle)
-            #        display.clear_output(wait=True)
-            #        display.display(plt.gcf())
 
         # Run next batch
         offset += batch
