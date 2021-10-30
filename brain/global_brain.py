@@ -13,13 +13,23 @@ class GlobalBrain(Brain):
    # Measures
 
    def closest_to_target(self):
+      """
+      Returns how much closer a target node becomes when moving to a node adjacent to the current location
+
+      Returns
+      -------
+      out : numpy.ndarray
+          How much closer a target node becomes for any target and edge.
+          A 3D matrix indexed by out[target, loc, nxt]
+      """
+
       n = self.res
       range_n = range(n)
       ctt = np.ones((n,n,n)) * np.inf
-      for i in range_n:
-         for j in range_n:
-            if self.sc_bin[i, j] == 0:
+      for loc in range_n:
+         for nxt in range_n:
+            if self.sc_bin[loc, nxt] == 0:
                continue
             for target in range_n:
-               ctt[target, i, j] = self.euc_dist[i, target] - self.euc_dist[j, target]
+               ctt[target, loc, nxt] = self.euc_dist[loc, target] - self.euc_dist[nxt, target]
       return ctt
