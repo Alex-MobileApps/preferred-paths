@@ -230,12 +230,11 @@ class TestBrain(Test):
         test(brain, 3, [0,1], True)
         test(brain, 0, [2,3], False)
 
-    def test_leave_non_target_region(self):
-        M = np.array(
-            [[0,1,1,1,1],[1,0,1,1,1],[1,1,0,1,1],[1,1,1,0,1],[1,1,1,1,0]])
+    def test_edge_con_diff_region(self):
+        M = np.array([[0,1,1,1,1],[1,0,1,1,1],[1,1,0,1,1],[1,1,1,0,1],[1,1,1,1,0]])
         regions = np.array([0,1,1,1,2])
         brain = Brain(sc=M, fc=M, euc_dist=M, regions=regions)
-        test = lambda brain, loc, nxt, target, exp: self.assertEqual(brain.leave_non_target_region(loc, nxt, target), exp)
+        test = lambda brain, loc, nxt, target, exp: self.assertEqual(brain.edge_con_diff_region(loc, nxt, target), exp)
         test(brain, 1, 2, 3, True)
         test(brain, 1, 4, 3, False)
         test(brain, 1, 2, 4, False)
@@ -256,6 +255,39 @@ class TestBrain(Test):
         regions = np.array([0,1,2,3,2,3,3])
         brain = Brain(sc=M, fc=M, euc_dist=M, regions=regions)
         test = lambda brain, loc, nxt, prev, exp: self.assert_float(brain.prev_visited_region(loc=loc, nxt=nxt, prev_nodes=prev), exp)
+        test(brain, 0, 1, [], False)
+        test(brain, 3, 5, [], False)
+        test(brain, 3, 5, [2], False)
+        test(brain, 5, 3, [4,6], False)
+        test(brain, 3, 4, [0,1,2], True)
+        test(brain, 4, 3, [6], True)
+
+    def test_is_target_func_region(self):
+        M = np.array([[0,1,2],[3,0,0],[0,0,0]])
+        func_regions = np.array([0,1,1])
+        brain = Brain(sc=M, fc=M, euc_dist=M, func_regions=func_regions)
+        test = lambda brain, nxt, target, exp: self.assertEqual(brain.is_target_func_region(nxt, target), exp)
+        test(brain, 0, 0, True)
+        test(brain, 1, 1, True)
+        test(brain, 0, 1, False)
+        test(brain, 0, 2, False)
+        test(brain, 1, 2, True)
+
+    def test_edge_con_diff_func_region(self):
+        M = np.array([[0,1,1,1,1],[1,0,1,1,1],[1,1,0,1,1],[1,1,1,0,1],[1,1,1,1,0]])
+        func_regions = np.array([0,1,1,1,2])
+        brain = Brain(sc=M, fc=M, euc_dist=M, func_regions=func_regions)
+        test = lambda brain, loc, nxt, target, exp: self.assertEqual(brain.edge_con_diff_func_region(loc, nxt, target), exp)
+        test(brain, 1, 2, 3, True)
+        test(brain, 1, 4, 3, False)
+        test(brain, 1, 2, 4, False)
+        test(brain, 1, 0, 4, True)
+
+    def test_prev_visited_func_region(self):
+        M = np.array([[0,1,0,0,0,0,0],[1,0,1,0,0,0,0],[0,1,0,1,0,0,0],[0,0,1,0,1,1,0],[0,0,0,1,0,0,1],[0,0,0,1,0,0,1],[0,0,0,0,1,1,0]])
+        func_regions = np.array([0,1,2,3,2,3,3])
+        brain = Brain(sc=M, fc=M, euc_dist=M, func_regions=func_regions)
+        test = lambda brain, loc, nxt, prev, exp: self.assert_float(brain.prev_visited_func_region(loc=loc, nxt=nxt, prev_nodes=prev), exp)
         test(brain, 0, 1, [], False)
         test(brain, 3, 5, [], False)
         test(brain, 3, 5, [2], False)

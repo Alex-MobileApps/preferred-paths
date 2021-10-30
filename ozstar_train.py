@@ -51,6 +51,7 @@ if __name__ == "__main__":
     euc_dist = loadmat('/fred/oz192/euc_dist.mat')[f'eu{res}']
     hubs = np.loadtxt(f'/fred/oz192/data_n484/hubs_{res}.txt', dtype=np.int, delimiter=',')
     regions = np.loadtxt(f'/fred/oz192/data_n484/regions_{res}.txt', dtype=np.int, delimiter=',')
+    func_regions = np.loadtxt(f'/fred/oz192/data_n484/func_reg{res}.txt', dtype=np.int, delimiter=',')
 
     # Network parameters
     if log: print("Creating network...")
@@ -78,7 +79,7 @@ if __name__ == "__main__":
     if log: print('Loading brains...')
     train_idx = plt_data['train_idx']
     if len(train_idx) == 1: train_idx = [0]
-    train_data = BrainDataset(sc[train_idx], fc[train_idx], euc_dist, hubs, regions)
+    train_data = BrainDataset(sc[train_idx], fc[train_idx], euc_dist, hubs, regions, func_regions)
     if log: print('====================')
 
     # Reinforce and save after each epoch
