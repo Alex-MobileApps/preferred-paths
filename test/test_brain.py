@@ -240,7 +240,7 @@ class TestBrain(Test):
         test(brain, 1, 2, 4, False)
         test(brain, 1, 0, 4, True)
 
-    def test_inter_regional_nodes(self):
+    def test_inter_regional_connections(self):
         M = np.array([[0,2,0,0,0],[2,0,3,0,0],[0,3,0,4,5],[0,0,4,0,0],[0,0,5,0,0]])
         regions = np.array([0,0,1,2,2])
         brain = Brain(sc=M, fc=M, euc_dist=M, regions=regions)
@@ -294,6 +294,16 @@ class TestBrain(Test):
         test(brain, 5, 3, [4,6], False)
         test(brain, 3, 4, [0,1,2], True)
         test(brain, 4, 3, [6], True)
+
+    def test_inter_func_regional_connections(self):
+        M = np.array([[0,2,0,0,0],[2,0,3,0,0],[0,3,0,4,5],[0,0,4,0,0],[0,0,5,0,0]])
+        func_regions = np.array([0,0,1,2,2])
+        brain = Brain(sc=M, fc=M, euc_dist=M, func_regions=func_regions)
+        test = lambda brain, weighted, distinct, exp: self.assert_float(brain.inter_func_regional_connections(weighted=weighted, distinct=distinct), exp)
+        test(brain, True, True,   np.array([0,3,12,4,5]))
+        test(brain, True, False,  np.array([0,3,12,4,5]))
+        test(brain, False, True,  np.array([0,1,2,1,1]))
+        test(brain, False, False, np.array([0,1,3,1,1]))
 
 if __name__ == '__main__':
     TestBrain.main()

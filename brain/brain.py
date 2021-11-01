@@ -321,21 +321,7 @@ class Brain():
           How many inter-regional connections each node has
       """
 
-      M = np.zeros(self.res)
-      for i in range(self.res):
-         r = self._regions[i]
-
-         # Only include where an edge to a different region exists
-         mask = np.where((self.sc_bin[i] > 0) & (self._regions != r))
-
-         if weighted:
-            M[i] = self.sc[i][mask].sum()
-         elif not distinct:
-            M[i] = self.sc_bin[i][mask].sum()
-         else:
-            M[i] = len(set(self._regions[mask]))
-
-      return M
+      return self._int_reg_con(self._regions, weighted, distinct)
 
    def prev_visited_region(self, loc, nxt, prev_nodes):
       """
@@ -421,6 +407,24 @@ class Brain():
 
       return Brain._prev_vis_reg(self._func_regions, loc, nxt, prev_nodes)
 
+   def inter_func_regional_connections(self, weighted=True, distinct=False):
+      """
+      Returns how many connections each node has to different functional regions
+
+      Parameters
+      ----------
+      weighted : bool
+          Whether or not to sum the weights of the streamlines of the inter-functional-regional connections
+      distinct : bool
+          Whether to count the number of distinct inter-functional-regional connections or the total number of inter-functional-regional connections (only used if weighted=False)
+
+      Returns
+      -------
+      out : numpy.ndarray
+          How many inter-functional-regional connections each node has
+      """
+
+      return self._int_reg_con(self._func_regions, weighted, distinct)
 
    # Measures not in use
 
@@ -680,3 +684,30 @@ class Brain():
          if nxt_r == regions[p]:
             return 1
       return 0
+
+   def _int_reg_con(self, regions, weighted=True, distinct=False):
+      """
+      Returns how many connections each node has to different predefined regions
+
+      Parameters
+      ----------
+      regions : Defined regions for each node
+      weighted : Whether or not to sum the weights of the streamlines of the inter-regional connections
+      distinct : Whether to count the number of distinct inter-regional connections or the total number of inter-regional connections (only used if weighted=False)
+      """
+
+      M = np.zeros(self.res)
+      for i in range(self.res):
+         r = regions[i]
+
+         # Only include where an edge to a different region exists
+         mask = np.where((self.sc_bin[i] > 0) & (regions != r))
+
+         if weighted:
+            M[i] = self.sc[i][mask].sum()
+         elif not distinct:
+            M[i] = self.sc_bin[i][mask].sum()
+         else:
+            M[i] = len(set(regions[mask]))
+
+      return M

@@ -314,6 +314,18 @@ print(brain.prev_visited_func_region(loc=3, nxt=6, prev_nodes=[0,1]))
 # 0
 ```
 
+### Inter-functional-region connections
+Returns how many connections each node has to different functional regions
+```
+print(brain.inter_func_regional_connections(weighted=True))
+
+# [ 0.  9.  8. 13.  3. 19. 14.  0.]
+
+print(brain.inter_func_regional_connections(weighted=False, distinct=True))
+
+# [0. 1. 1. 1. 1. 2. 2. 0.]
+```
+
 ### Shortest paths
 Lengths of the shortest paths between nodes
 ```
