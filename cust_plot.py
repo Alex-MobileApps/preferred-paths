@@ -3,7 +3,7 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 
 
-def _cust_plot(ax, x, y, title=None, xlab=None, ylab=None, labels=None, off=0, avg=None):
+def _cust_plot(ax, x, y, title=None, xlab=None, ylab=None, labels=None, off=0, avg=None, loc='best'):
     inst = lambda M: any(isinstance(M, j) for j in [list, np.ndarray])
     get = lambda M: (lambda i: M[i]) if inst(M[0])  else (lambda i: M)
     len2d = lambda M: len(M) if inst(M[0]) else 1
@@ -23,7 +23,7 @@ def _cust_plot(ax, x, y, title=None, xlab=None, ylab=None, labels=None, off=0, a
              x_avg, y_avg = move_avg(yi, avg)
              ax.plot(x_avg + xi[0], y_avg, label=f'{label} {avg} point avg')
     if labels:
-        ax.legend()
+        ax.legend(loc=loc)
     return ax
 
 
@@ -33,7 +33,7 @@ def _cust_plot_pdf(ax, mu, sig, title=None, xlab=None, ylab=None, labels=None):
     count = abs((xmax - xmin) / 1000)
     x = np.arange(xmin, xmax, count)
     y = [norm.pdf(x, mu[i], sig[i]) for i in range(len(mu))]
-    return _cust_plot(ax=ax, x=x, y=y, title=title, xlab=xlab, ylab=ylab, labels=labels)
+    return _cust_plot(ax=ax, x=x, y=y, title=title, xlab=xlab, ylab=ylab, labels=labels, loc='center right')
 
 
 def move_avg(y, p):
