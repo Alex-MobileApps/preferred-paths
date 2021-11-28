@@ -95,6 +95,8 @@ class BrainDataset():
         if name == 'inter_func_regional_connections':
             vals = brain.inter_func_regional_connections(weighted=False, distinct=True)
             return lambda loc, nxt, prev_nodes, target: vals[nxt]
+        if name == 'rand_walk':
+            return lambda loc, nxt, prev_nodes, target: 1
         if name == 'closest_to_target':
             vals = brain.closest_to_target
             return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, target)
