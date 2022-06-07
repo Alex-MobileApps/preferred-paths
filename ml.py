@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import List
 
 class BrainDataset():
-    def __init__(self, sc: np.ndarray, fc: np.ndarray, euc_dist: np.ndarray, hubs: np.ndarray, regions: np.ndarray, func_regions: np.ndarray, fns: List[str]):
+    def __init__(self, sc: np.ndarray, fc: np.ndarray, euc_dist: np.ndarray, hubs: np.ndarray, regions: np.ndarray, func_regions: np.ndarray, fns: List[str], fn_weights: List[int] = None):
         """
         Parameters
         ----------
@@ -29,6 +29,9 @@ class BrainDataset():
         fns : List[str]
             List of strings with the function name to use for ML. Valid functions include:
             'streamlines', 'node_str', 'target_node', 'target_region', 'hub', 'neighbour_just_visited_node', 'edge_con_diff_region', 'inter_regional_connections', 'prev_visited_region', 'target_func_region', 'edge_con_diff_func_region', 'prev_visited_func_region'
+        fn_weights : List[int], optional
+            Initial criteria function weights, by default None
+            If None, random weights will be generated instead
         """
 
         n = len(sc)
@@ -49,7 +52,7 @@ class BrainDataset():
             fn_vector = [None] * num_fns
             for j, name in enumerate(fns):
                 fn_vector[j] = BrainDataset.fn_mapper(name, brain)
-            weights = list(np.random.random(size=num_fns))
+            weights = list(np.random.random(size=num_fns)) if fn_weights is None else fn_weights
             self.adj[i] = T(brain.sc_bin[triu_i].astype(int), dtype=torch.int).to(device)
             self.sp[i] = T(brain.shortest_paths(), dtype=torch.float).to(device)
             self.pp[i] = PreferredPath(adj=brain.sc_bin, fn_vector=fn_vector, fn_weights=weights)
