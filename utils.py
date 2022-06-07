@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import random
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -60,6 +61,22 @@ def binarise_matrix(M, thresh_val, thresh_type='pos'):
     M_bin[n] = 0
 
     return M_bin
+
+def set_rand_seed(seed: int) -> None:
+    """
+    Sets the random seed for the random, NumPy and PyTorch libaries
+
+    Parameters
+    ----------
+    seed : int
+        Random seed to use
+    """
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
 
 def train_cv_test_split(M, train_pct, cv_pct):
     """
