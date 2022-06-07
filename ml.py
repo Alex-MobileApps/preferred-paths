@@ -52,7 +52,16 @@ class BrainDataset():
             fn_vector = [None] * num_fns
             for j, name in enumerate(fns):
                 fn_vector[j] = BrainDataset.fn_mapper(name, brain)
-            weights = list(np.random.random(size=num_fns)) if fn_weights is None else fn_weights
+
+            # Initialise weights from -1 to 1
+            if fn_weights is None:
+                weights = list(np.random.random(size=num_fns) * 2 - 1) # Change scale from 0..1 to -1..1
+            else:
+                weights = fn_weights
+            max_weight = abs(max(weights, key=abs))
+            weights = [w / max_weight for w in weights] # Set largest to -1 or 1
+
+            # Store vars
             self.adj[i] = T(brain.sc_bin[triu_i].astype(int), dtype=torch.int).to(device)
             self.sp[i] = T(brain.shortest_paths(), dtype=torch.float).to(device)
             self.pp[i] = PreferredPath(adj=brain.sc_bin, fn_vector=fn_vector, fn_weights=weights)
