@@ -55,9 +55,9 @@ if __name__ == "__main__":
     sc = np.array([sc[f's{str(z+1).zfill(3)}'] for z in subj])
     fc = np.array([fc[f's{str(z+1).zfill(3)}'] for z in subj])
     euc_dist = loadmat('/fred/oz192/euc_dist.mat')[f'eu{res}']
-    hubs = np.loadtxt(f'/fred/oz192/data_n484/hubs_{res}.txt', dtype=np.int, delimiter=',')
-    regions = np.loadtxt(f'/fred/oz192/data_n484/regions_{res}.txt', dtype=np.int, delimiter=',')
-    func_regions = np.loadtxt(f'/fred/oz192/data_n484/func_reg{res}.txt', dtype=np.int, delimiter=',')
+    hubs = np.loadtxt(f'/fred/oz192/data_n484/hubs_{res}.txt', dtype=int, delimiter=',')
+    regions = np.loadtxt(f'/fred/oz192/data_n484/regions_{res}.txt', dtype=int, delimiter=',')
+    func_regions = np.loadtxt(f'/fred/oz192/data_n484/func_reg{res}.txt', dtype=int, delimiter=',')
 
     # Network parameters
     if log: print("Creating network...")

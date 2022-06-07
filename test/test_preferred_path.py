@@ -18,7 +18,7 @@ class TestPaths(Test):
              [0,9,1,6,3,0,0,0],
              [0,0,7,7,0,0,0,0],
              [0,0,0,0,0,0,0,0]])
-        cls.adj = (cls.sc > 0).astype(np.int)
+        cls.adj = (cls.sc > 0).astype(int)
         cls.deg = cls.adj.sum(axis=0)
         cls.fn_vector = [lambda loc, nxt, prev, target: cls.sc[loc,nxt], lambda loc, nxt, prev, target: cls.deg[nxt]]
         cls.fn_weights = [0.4, 0.7]

@@ -59,7 +59,7 @@ class BrainDataset():
             # Set weights with random seed
             weights = list(np.random.random(size=num_fns))
 
-            self.adj[i] = T(brain.sc_bin[triu_i].astype(np.int), dtype=torch.int).to(device)
+            self.adj[i] = T(brain.sc_bin[triu_i].astype(int), dtype=torch.int).to(device)
             self.sp[i] = T(brain.shortest_paths(), dtype=torch.float).to(device)
             self.pp[i] = PreferredPath(adj=brain.sc_bin, fn_vector=fn_vector, fn_weights=weights)
             self.sample_idx[i] = np.column_stack(np.where(brain.fc_bin > 0))

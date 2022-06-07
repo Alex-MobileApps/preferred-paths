@@ -61,7 +61,7 @@ class Brain():
       self._sp_hops = None
       self._sp_dist = None
 
-      self._hubs = np.array(hubs, dtype=np.int) if hubs is not None else np.array([], dtype=np.int)
+      self._hubs = np.array(hubs, dtype=int) if hubs is not None else np.array([], dtype=int)
       if len(self._hubs) != 0:
          if self._hubs.min() < 0 or self._hubs.max() > len(self._sc) - 1 or len(self._hubs.shape) > 1:
             raise ValueError("Invalid hub node indexes")
@@ -237,7 +237,7 @@ class Brain():
       if not binary:
          return self._hubs
       else:
-         M = np.zeros(self.res, dtype=np.int)
+         M = np.zeros(self.res, dtype=int)
          M[self._hubs] = 1
          return M
 
@@ -626,7 +626,7 @@ class Brain():
       res : resolution of the brain
       """
 
-      regions = np.array(M, dtype=np.int) if M is not None else np.array([], dtype=np.int)
+      regions = np.array(M, dtype=int) if M is not None else np.array([], dtype=int)
       if len(regions) != 0:
          if len(regions) < res or len(regions.shape) > 1:
             raise ValueError("Invalid regions")
