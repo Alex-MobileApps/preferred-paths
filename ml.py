@@ -7,27 +7,31 @@ from torch.nn import Sequential, Linear, ReLU, Module
 from torch.distributions import Normal
 from utils import device
 from datetime import datetime
+from typing import List
 
 class BrainDataset():
-    def __init__(self, sc, fc, euc_dist, hubs, regions, func_regions, fns):
+    def __init__(self, sc: np.ndarray, fc: np.ndarray, euc_dist: np.ndarray, hubs: np.ndarray, regions: np.ndarray, func_regions: np.ndarray, fns: List[str], fns_seed: int = None):
         """
         Parameters
         ----------
-        sc, fc : numpy.ndarray
+        sc, fc : np.ndarray
             Connectivity matrices for each subject
             3D with shape: (number of subjects, resolution, resolution)
-        euc_dist : numpy.ndarray
+        euc_dist : np.ndarray
             Euclidean distance matrix
             2D with shape: (resolution, resolution)
-        hubs : numpy.ndarray
+        hubs : np.ndarray
             Array with the indexes of the hub nodes
-        regions : numpy.ndarray
+        regions : np.ndarray
             Array with the region number each node is assigned to
-        func_regions : numpy.ndarray
+        func_regions : np.ndarray
             Array with the functional region number each node is assigned to
-        fns : list
+        fns : List[str]
             List of strings with the function name to use for ML. Valid functions include:
             'streamlines', 'node_str', 'target_node', 'target_region', 'hub', 'neighbour_just_visited_node', 'edge_con_diff_region', 'inter_regional_connections', 'prev_visited_region', 'target_func_region', 'edge_con_diff_func_region', 'prev_visited_func_region'
+        fns_seed : int, optional
+            Fixed random seed to use to initialise criteria function weights, by default None
+            If None, criteria function weights will be initialised randomly
         """
 
         n = len(sc)
@@ -42,17 +46,27 @@ class BrainDataset():
         self.pp = [None] * n
         self.sample_idx = [None] * n
 
+        # Set random seed for criteria weights init
+        np.random.seed(fns_seed)
+
         # Fill vars
         for i in range(n):
             brain = GlobalBrain(sc[i], fc[i], euc_dist, hubs=hubs, regions=regions, func_regions=func_regions)
             fn_vector = [None] * num_fns
             for j, name in enumerate(fns):
                 fn_vector[j] = BrainDataset.fn_mapper(name, brain)
+
+            # Set weights with random seed
             weights = list(np.random.random(size=num_fns))
+
             self.adj[i] = T(brain.sc_bin[triu_i].astype(np.int), dtype=torch.int).to(device)
             self.sp[i] = T(brain.shortest_paths(), dtype=torch.float).to(device)
             self.pp[i] = PreferredPath(adj=brain.sc_bin, fn_vector=fn_vector, fn_weights=weights)
             self.sample_idx[i] = np.column_stack(np.where(brain.fc_bin > 0))
+
+        # Remove fixed random seed
+        np.random.seed()
+
 
     @staticmethod
     def fn_mapper(name, brain):
