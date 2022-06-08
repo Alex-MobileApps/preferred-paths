@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from scipy.io import loadmat
 from ml import BrainDataset, PolicyEstimator, reinforce
-from utils import device, train_cv_test_split
+from utils import device, train_cv_test_split, set_rand_seed
 from argparse import ArgumentParser
 from preferred_path import PreferredPath
 
@@ -23,6 +23,7 @@ if __name__ == "__main__":
     add('savefreq', 1, int)
     add('nolog', False, bool, const=True)
     add('pathmethod', PreferredPath._DEF_METHOD, str)
+    add('seed', None, int)
     add_list('fns')
     args = vars(parser.parse_args())
 
@@ -39,15 +40,20 @@ if __name__ == "__main__":
     save_freq = args['savefreq']
     log = not args['nolog']
     path_method = args['pathmethod']
+    seed = args['seed']
     fns = args['fns']
     num_fns = len(fns)
 
     print('\n====================')
     subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
-    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', f'path_method = {path_method}', f'Functions = {num_fns} ({", ".join([f for f in fns])})', sep='\n')
+    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', f'path_method = {path_method}', f'rand_seed = {seed}', f'Functions = {num_fns} ({", ".join([f for f in fns])})', sep='\n')
     print('====================', flush=True)
     if log:
         print('Reading files...')
+
+    # Apply random seed
+    if seed is not None:
+        set_rand_seed(seed)
 
     # Read brain data
     sc = loadmat(f'/fred/oz192/data_n484/subjfiles_SC{res}.mat')
