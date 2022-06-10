@@ -124,7 +124,7 @@ class BrainDataset():
 
 
 class PolicyEstimator(Module):
-    def __init__(self, res, fn_len, hidden_units=20):
+    def __init__(self, res, fn_len, hidden_units=20, init_weight=None):
         """
         Parameters
         ----------
@@ -134,6 +134,9 @@ class PolicyEstimator(Module):
             Number of function criteria
         hidden_units : int, optional
             Number of units in the hidden layer, by default 20
+        init_weight : int, optional
+            Initial weight for all edges in the neural network, by default None
+            If None, weights are set randomly
         """
 
         super(PolicyEstimator, self).__init__()
@@ -143,6 +146,11 @@ class PolicyEstimator(Module):
             Linear(self.n_inputs, hidden_units),
             ReLU(),
             Linear(hidden_units, self.n_outputs))
+
+        # Set a fixed network weight
+        if init_weight is not None:
+            for layer in [0,2]:
+                torch.nn.init.constant_(self.network[layer].weight, init_weight)
 
     def predict(self, state):
         return self.network(state)
