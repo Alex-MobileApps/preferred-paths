@@ -24,6 +24,7 @@ if __name__ == "__main__":
     add('nolog', False, bool, const=True)
     add('pathmethod', PreferredPath._DEF_METHOD, str)
     add('seed', None, int)
+    add('nnweight', None, float)
     add_list('fns')
     args = vars(parser.parse_args())
 
@@ -41,12 +42,13 @@ if __name__ == "__main__":
     log = not args['nolog']
     path_method = args['pathmethod']
     seed = args['seed']
+    nn_init_weight = args['nnweight']
     fns = args['fns']
     num_fns = len(fns)
 
     print('\n====================')
     subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
-    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', f'path_method = {path_method}', f'rand_seed = {seed}', f'Functions = {num_fns} ({", ".join([f for f in fns])})', sep='\n')
+    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', f'path_method = {path_method}', f'rand_seed = {seed}', f'nn_init_weight = {nn_init_weight}', f'Functions = {num_fns} ({", ".join([f for f in fns])})', sep='\n')
     print('====================', flush=True)
     if log:
         print('Reading files...')
@@ -67,7 +69,7 @@ if __name__ == "__main__":
 
     # Network parameters
     if log: print("Creating network...")
-    pe = PolicyEstimator(res, num_fns, hidden_units=hidden_units).to(device)
+    pe = PolicyEstimator(res, num_fns, hidden_units=hidden_units, init_weight=nn_init_weight).to(device)
     opt = torch.optim.Adam(pe.network.parameters(), lr=lr)
 
     # Init new/load previous training data
