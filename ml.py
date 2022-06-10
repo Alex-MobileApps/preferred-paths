@@ -134,7 +134,7 @@ class PolicyEstimator(Module):
             Number of function criteria
         hidden_units : int, optional
             Number of units in the hidden layer, by default 20
-        init_weight : int, optional
+        init_weight : float, optional
             Initial weight for all edges in the neural network, by default None
             If None, weights are set randomly
         """
