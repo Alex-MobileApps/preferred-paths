@@ -64,10 +64,13 @@ class BrainDataset():
             weights = [w / max_weight for w in weights] # Set largest to -1 or 1
 
             # Store vars
+            tmp_sp = brain.shortest_paths()
             self.adj[i] = T(brain.sc_bin[triu_i].astype(int), dtype=torch.int).to(device)
-            self.sp[i] = T(brain.shortest_paths(), dtype=torch.float).to(device)
             self.pp[i] = PreferredPath(adj=brain.sc_bin, fn_vector=fn_vector, fn_weights=weights)
-            self.sample_idx[i] = np.column_stack(np.where(brain.fc_bin > 0))
+            self.sp[i] = T(tmp_sp, dtype=torch.float).to(device)
+
+            # FC edge locations where there is a connected SC path
+            self.sample_idx[i] = np.column_stack(np.where((brain.fc_bin > 0) & (tmp_sp > 0)))
 
 
     @staticmethod
@@ -364,7 +367,7 @@ def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batc
             if log:
                 print(f'\r{str(i+1+offset)}', end='')
             pp[i].fn_weights = actions[i].tolist()
-            rewards[i], success[i] = sample_batch_fn(pp[i], sp[i], sample, sample_idx[i], path_method) if sample > 0 else full_batch_fn(pp[i], sp[i], path_method)
+            rewards[i], success[i] = sample_batch_fn(pp[i], sp[i], sample, sample_idx[i], path_method) if sample > 0 else full_batch_fn(pp[i], sp[i], sample_idx[i], path_method)
 
         # Step
         step_fn(opt, N, actions, rewards)
@@ -419,26 +422,24 @@ def sample_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, sample: int, sample_i
     len_sample_idx = len(sample_idx)
     path_method = pp._convert_method_to_fn(path_method)
 
-    # Compute random FC samples
+    # Predict random FC samples
     for i in range(sample):
 
-        # Make sure a path exists between FC edge nodes
-        sp_val = 0
-        while sp_val <= 0:
-            s, t = sample_idx[np.random.choice(len_sample_idx)]
-            sp_val = sp[s,t]
+        # Source and target node
+        s, t = sample_idx[np.random.choice(len_sample_idx)]
 
-        # Compute path prediction and rewards
+        # Compute rewards and success
         pred = PreferredPath._single_path_formatted(path_method, s, t, False)
-        rewards[i] = local_reward(pred, sp_val)
+        rewards[i] = local_reward(pred, sp[s,t])
         success[i] = pred != -1
 
+    # Compute average reward and success
     return rewards.mean(), success.mean()
 
 
-def full_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, path_method: str) -> Tuple[torch.Tensor, torch.Tensor]:
+def full_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, sample_idx: np.ndarray, path_method: str) -> Tuple[torch.Tensor, torch.Tensor]:
     """
-    Returns the average reward and success from all edges in a Brain
+    Returns the average reward and success from all FC edges in a Brain
 
     Parameters
     ----------
@@ -446,6 +447,8 @@ def full_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, path_method: str) -> Tu
         Preferred path algorithm for the brain
     sp : torch.Tensor
         Shortest paths matrix for the brain
+    sample_idx : np.ndarray
+        Indexes of all FC edge source and target pairs in the brain
     path_method : str
         See 'reinforce' for more information
 
@@ -455,12 +458,15 @@ def full_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, path_method: str) -> Tu
         Tuple containing the average reward and success as single element tensors
     """
 
-    # Predict where a path exists
-    mask = torch.where(sp > 0)
-    pred = T(pp.retrieve_all_paths(method=path_method)[mask], dtype=torch.float).to(device)
+    path_method = pp._convert_method_to_fn(path_method)
 
-    # Extract average reward and success
-    rewards = global_reward(pred, sp[mask])
+    # Predict all FC edges
+    pred = torch.zeros(len(sample_idx), dtype=torch.float).to(device)
+    for i, (s,t) in enumerate(sample_idx):
+        pred[i] = PreferredPath._single_path_formatted(path_method, s, t, False)
+
+    # Compute average reward and success
+    rewards = global_reward(pred, sp[sample_idx[:,0],sample_idx[:,1]])
     success = 1 - (pred == -1).sum() / len(pred)
     return rewards, success
 
