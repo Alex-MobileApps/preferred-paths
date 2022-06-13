@@ -7,11 +7,13 @@ from torch.nn import Sequential, Linear, ReLU, Module
 from torch.distributions import Normal
 from utils import device
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
 
 class BrainDataset():
     def __init__(self, sc: np.ndarray, fc: np.ndarray, euc_dist: np.ndarray, hubs: np.ndarray, regions: np.ndarray, func_regions: np.ndarray, fns: List[str], fn_weights: List[int] = None):
         """
+        Creates a new BrainDataset object
+
         Parameters
         ----------
         sc, fc : np.ndarray
@@ -69,7 +71,29 @@ class BrainDataset():
 
 
     @staticmethod
-    def fn_mapper(name, brain):
+    def fn_mapper(name: str, brain: 'Brain') -> 'function':
+        """
+        Extract a criteria function for a brain
+
+        Parameters
+        ----------
+        name : str
+            Criteria function name
+            Avaiable names: 'streamlines', 'node_str', 'target_node', 'target_region', 'hub', 'neighbour_just_visited_node', 'edge_con_diff_region', 'inter_regional_connections', 'prev_visited_region', 'target_func_region', 'edge_con_diff_func_region', 'prev_visited_func_region', 'inter_func_regional_connections', 'rand_walk', 'closest_to_target'
+        brain : Brain
+            Brain to get the criteria function for
+
+        Returns
+        -------
+        function
+            Function to calculate the criteria function for a potential next node from the current location, potential next node, previous nodes and target node
+
+        Raises
+        ------
+        ValueError
+            If criteria name is invalid
+        """
+
         if name == 'streamlines':
             vals = brain.streamlines()
             return lambda loc, nxt, prev_nodes, target: vals[loc,nxt]
@@ -116,16 +140,44 @@ class BrainDataset():
             return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, target)
         raise ValueError(f'{name} is an invalid function')
 
-    def __len__(self):
+
+    def __len__(self) -> int:
+        """
+        Number of brains in the dataset
+
+        Returns
+        -------
+        int
+            Number of brains in the dataset
+        """
+
         return len(self.adj)
 
-    def __getitem__(self, idx):
+
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, list, list]:
+        """
+        Returns data for a brain at a specified index in the dataset
+        Includes: unweighted adjacency matrix, shortest path matrix, preferred-path model, FC edge indexes
+
+        Parameters
+        ----------
+        idx : int
+            Index of the brain in the dataset
+
+        Returns
+        -------
+        Tuple[torch.Tensor, torch.Tensor, list, list]
+            Adjacency matrix, shortest path matrix, preferred-path model, FC edge indexes
+        """
+
         return (self.adj[idx], self.sp[idx], self.pp[idx], self.sample_idx[idx])
 
 
 class PolicyEstimator(Module):
-    def __init__(self, res, fn_len, hidden_units=20, init_weight=None):
+    def __init__(self, res: int, fn_len: int, hidden_units: int = 20, init_weight: float = None):
         """
+        Creates a neural network for a continuous action space policy gradient
+
         Parameters
         ----------
         res : int
@@ -142,6 +194,8 @@ class PolicyEstimator(Module):
         super(PolicyEstimator, self).__init__()
         self.n_inputs = int(res * (res - 1) / 2)
         self.n_outputs = fn_len * 2 # includes both mean and sigma
+
+        # Create neural network
         self.network = Sequential(
             Linear(self.n_inputs, hidden_units),
             ReLU(),
@@ -152,19 +206,34 @@ class PolicyEstimator(Module):
             for layer in [0,2]:
                 torch.nn.init.constant_(self.network[layer].weight, init_weight)
 
-    def predict(self, state):
+
+    def predict(self, state: torch.Tensor) -> torch.Tensor:
+        """
+        Returns the forward pass output from the neural network
+
+        Parameters
+        ----------
+        state : torch.Tensor
+            Sequence of unweighted adjacency matrices for each brain in the batch
+
+        Returns
+        -------
+        torch.Tensor
+            Forward pass output
+        """
+
         return self.network(state)
 
 
-def global_reward(pred, sp):
+def global_reward(pred: np.ndarray, sp: np.ndarray) -> float:
     """
     Returns a reward, defined by the global navigation efficiency ratio
 
     Parameters
     ----------
-    pred : numpy.ndarray
+    pred : np.ndarray
         Predicted path lengths vector
-    sp : numpy.ndarray
+    sp : np.ndarray
         Shortest path lengths vector
 
     Returns
@@ -182,7 +251,7 @@ def global_reward(pred, sp):
     return local.sum() / sp.size
 
 
-def local_reward(pred, sp):
+def local_reward(pred: int, sp: int) -> float:
     """
     Returns a reward, defined by the local navigation efficiency ratio
 
@@ -204,7 +273,7 @@ def local_reward(pred, sp):
     return 0
 
 
-def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, save_path=None, save_freq=1, log=False, path_method=PreferredPath._DEF_METHOD):
+def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epochs: int, batch: int, lr: float, sample: int = 0, plt_data: dict = None, save_path: str = None, save_freq: int = 1, log: bool = False, path_method: str = PreferredPath._DEF_METHOD) -> None:
     """
     Runs the continuous policy gradient reinforce algorithm
 
@@ -263,7 +332,17 @@ def reinforce(pe, opt, data, epochs, batch, lr, sample=0, plt_data=None, save_pa
             print('\rDone')
 
 
-def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log, path_method):
+def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batch: int, sample: int, num_fns: int, plt_data: dict, log: bool, path_method: str):
+    """
+    Performs an epoch of training
+
+    Parameters
+    ----------
+    num_fns : int
+        Number of criteria functions
+    See 'reinforce' for more information on parameters
+    """
+
     t1 = datetime.now() # Track epoch duration
     offset = 0
     while offset + batch <= len(data):
@@ -311,17 +390,44 @@ def epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log, path_method):
     plt_data['epochs'] += 1
 
 
-def sample_batch_fn(pp, sp, sample, sample_idx, path_method):
+def sample_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, sample: int, sample_idx: np.ndarray, path_method: str) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Returns the average reward and success from a number of FC edges sampled randomly with replacement in a Brain
+
+    Parameters
+    ----------
+    pp : PreferredPath
+        Preferred path algorithm for the brain
+    sp : torch.Tensor
+        Shortest paths matrix for the brain
+    sample : int
+        Number of FC edge samples
+    sample_idx : np.ndarray
+        Indexes of all FC edge source and target pairs in the brain
+    path_method : str
+        See 'reinforce' for more information
+
+    Returns
+    -------
+    Tuple[torch.Tensor, torch.Tensor]
+        Tuple containing the average reward and success
+    """
+
     rewards = torch.zeros(sample, dtype=torch.float).to(device)
     success = torch.zeros(sample, dtype=torch.float).to(device)
     len_sample_idx = len(sample_idx)
     path_method = pp._convert_method_to_fn(path_method)
 
+    # Compute random FC samples
     for i in range(sample):
+
+        # Make sure a path exists between FC edge nodes
         sp_val = 0
         while sp_val <= 0:
             s, t = sample_idx[np.random.choice(len_sample_idx)]
             sp_val = sp[s,t]
+
+        # Compute path prediction and rewards
         pred = PreferredPath._single_path_formatted(path_method, s, t, False)
         rewards[i] = local_reward(pred, sp_val)
         success[i] = pred != -1
@@ -329,7 +435,7 @@ def sample_batch_fn(pp, sp, sample, sample_idx, path_method):
     return rewards.mean(), success.mean()
 
 
-def full_batch_fn(pp, sp, path_method):
+def full_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, path_method: str):
     mask = torch.where(sp > 0).to(device)
     pred = pp.retrieve_all_paths(method=path_method)[mask]
     rewards = global_reward(pred, sp[mask])
@@ -337,7 +443,22 @@ def full_batch_fn(pp, sp, path_method):
     return rewards, success
 
 
-def step_fn(opt, N, actions, rewards):
+def step_fn(opt: torch.optim, N: torch.distributions.Normal, actions: torch.Tensor, rewards: torch.Tensor) -> None:
+    """
+    Performs a backpropagation step to update the neural network weights
+
+    Parameters
+    ----------
+    opt : torch.optim
+        Neural network optimiser
+    N : torch.distributions.Normal
+        Normal distribution for the criteria
+    actions : torch.Tensor
+        Samples selected from the normal distribution
+    rewards : torch.Tensor
+        Rewards for each action
+    """
+
     opt.zero_grad()
     loss = -N.log_prob(actions) * (rewards - 0.5)
     loss = loss.mean()
@@ -345,7 +466,17 @@ def step_fn(opt, N, actions, rewards):
     opt.step()
 
 
-def save(path, pe, opt, plt_data):
+def save(path: str, pe: 'PolicyEstimator', opt: torch.optim, plt_data: dict):
+    """
+    Saves the current state of training to file
+
+    Parameters
+    ----------
+    path : str
+        Where to save the current state
+    See 'reinforce' for more information on parameters
+    """
+
     save_data = {
         'model_state_dict': pe.network.state_dict(),
         'optimizer_state_dict': opt.state_dict()}
