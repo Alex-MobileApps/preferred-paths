@@ -1,4 +1,5 @@
 import numpy as np
+from typing import List
 from utils import validate_binary, validate_loopless, validate_square
 
 class PreferredPath():
@@ -11,15 +12,15 @@ class PreferredPath():
 
     # Constructor
 
-    def __init__(self, adj, fn_vector, fn_weights, validate=True):
+    def __init__(self, adj: np.ndarray, fn_vector: List['function'], fn_weights: List[float], validate: bool = True):
         """
         Computes paths between node pairs, allowing for multiple criteria to select the next location at any step, as well as weighting of these criteria
 
         Parameters
         ----------
-        adj : numpy.ndarray
+        adj : np.ndarray
             Binary adjacency matrix that defines where edges are present
-        fn_vector : list
+        fn_vector : List[function]
             Sequence of functions used to give each node a score as the next node in the path, with parameters:
             - loc : int
                 Current node
@@ -29,9 +30,9 @@ class PreferredPath():
                 Path sequence so far (excluding 'loc')
             - target : int
                 Target node
-        fn_weights : list
+        fn_weights : List[float]
             Sequence of weights used to weight the importance of each function
-        validate : bool
+        validate : bool, optional
             Whether or not to validate parameter changes when optimising
         """
 
@@ -46,34 +47,34 @@ class PreferredPath():
     # Properties
 
     @property
-    def fn_length(self):
+    def fn_length(self) -> int:
         """
         Get the number of functions used as criteria in the model
         """
         return self._fn_len
 
     @property
-    def fn_vector(self):
+    def fn_vector(self) -> List['function']:
         """
         Get the list of functions used as criteria in the model
         """
         return self._fn_vector
 
     @property
-    def fn_weights(self):
+    def fn_weights(self) -> List[int]:
         """
         Get the list of weights applied to each function in the model
         """
         return self._fn_weights
 
     @fn_weights.setter
-    def fn_weights(self, value):
+    def fn_weights(self, value: List[float]) -> None:
         """
         Sets the list of weights applied to each function in the model
 
         Parameters
         ----------
-        value : list
+        value : List[float]
             List of weights
         """
 
@@ -84,20 +85,20 @@ class PreferredPath():
         self._fn_weights = value
 
     @property
-    def adj(self):
+    def adj(self) -> np.ndarray:
         """
         Get the adjacency matrix that defines where edges are present
         """
         return self._adj
 
     @adj.setter
-    def adj(self, value):
+    def adj(self, value: np.ndarray) -> None:
         """
         Sets the adjacency matrix that defines where edges are present
 
         Parameters
         ----------
-        value : numpy.ndarray
+        value : np.ndarray
             Binary adjacency matrix that defines where edges are present
         """
 
@@ -110,22 +111,22 @@ class PreferredPath():
 
     # Methods
 
-    def retrieve_all_paths(self, method=_DEF_METHOD, out_path=_DEF_OUT_PATH):
+    def retrieve_all_paths(self, method: str = _DEF_METHOD, out_path: bool =_DEF_OUT_PATH) -> 'dict or np.ndarray':
         """
         Returns the path sequences for all source and target nodes
 
         Parameters
         ----------
-        method : str
+        method : str, optional
             'rev'  : Revisits allowed. If a revisit occurs, that the path sequence equals 'None' due to entering an infinite loop
             'fwd'  : Forward only, nodes cannot be revisited and backtracking isn't allowed
             'back' : Backtracking allowed, nodes cannot be revisited and backtracking to previous nodes occur at dead ends to find alternate routes
-        out_path : bool
+        out_path : bool, optional
             Whether to output the full path sequence (True) or the number of hops in each path sequence (False)
 
         Returns
         -------
-        out : dict or numpy.ndarray
+        dict or numpy.ndarray
             Path sequences as a dict (out_path=True) or path lengths as a matrix (out_path=False) for all node pairs.
             E.g. out[1][4] = path sequence or path length for source node 1 and target node 4)
         """
@@ -138,7 +139,7 @@ class PreferredPath():
                     M[source][target] = PreferredPath._single_path_formatted(fn, source, target, out_path)
         return M
 
-    def retrieve_single_path(self, source, target, method=_DEF_METHOD, out_path=_DEF_OUT_PATH):
+    def retrieve_single_path(self, source: int, target: int, method: str = _DEF_METHOD, out_path: bool = _DEF_OUT_PATH) -> 'List[int] or int':
         """
         Returns the preferred path sequence for a single source and target node
 
@@ -148,16 +149,16 @@ class PreferredPath():
             Source node
         target : int
             Target node
-        method : str
+        method : str, optional
             'rev'  : Revisits allowed. If a revisit occurs, that the path sequence equals 'None' due to entering an infinite loop
             'fwd'  : Forward only, nodes cannot be revisited and backtracking isn't allowed
             'back' : Backtracking allowed, nodes cannot be revisited and backtracking to previous nodes occur at dead ends to find alternate routes
-        out_path : bool
+        out_path : bool, optional
             Whether to output the full path sequence (True) or the number of hops in each the sequence (False)
 
         Returns
         -------
-        out : list or int
+        List[int] or int
             Path sequence as a list if successful (out_path=True) or path length as an int (out_path=False) for the given node pair
         """
 
@@ -168,13 +169,15 @@ class PreferredPath():
     # Internal
 
     @staticmethod
-    def _single_path_formatted(fn, source, target, out_path):
+    def _single_path_formatted(fn, source: int, target: int, out_path: bool) -> 'List[int] or int':
         """
         Returns the preferred path formatted as the path length or path sequence, depending on the out_path boolean.
         Used by retrieve_all_paths and retrieve_single_path
 
         Parameters
         ----------
+        fn : function
+            Path algorithm method to use (_fwd, _rev or _back)
         source : int
             Source node
         target : int
@@ -184,7 +187,7 @@ class PreferredPath():
 
         Returns
         -------
-        out : list or int
+        List[int] or int
             Path sequence as a list if successful (out_path=True) or path length as an int (out_path=False) for the given node pair
         """
 
@@ -193,7 +196,7 @@ class PreferredPath():
         elif path is not None: return len(path) - 1
         else: return -1
 
-    def _fwd(self, source, target):
+    def _fwd(self, source: int, target: int) -> List[int]:
         """
         Returns the preferred path sequence for a single source and target node using the 'forward only' method
 
@@ -206,7 +209,7 @@ class PreferredPath():
 
         Returns
         -------
-        out : list
+        List[int]
             Path sequence for the given node pair if successful
         """
 
@@ -223,7 +226,7 @@ class PreferredPath():
         prev.append(target)
         return prev
 
-    def _rev(self, source, target):
+    def _rev(self, source: int, target: int) -> List[int]:
         """
         Returns the preferred path sequence for a single source and target node using the 'revisits' method
 
@@ -236,7 +239,7 @@ class PreferredPath():
 
         Returns
         -------
-        out : list
+        List[int]
             Path sequence for the given node pair if successful
         """
 
@@ -252,7 +255,7 @@ class PreferredPath():
         prev.append(target)
         return prev
 
-    def _back(self, source, target):
+    def _back(self, source: int, target: int) -> List[int]:
         """
         Returns the preferred path sequence for a single source and target node using the 'backtracking allowed' method
 
@@ -265,7 +268,7 @@ class PreferredPath():
 
         Returns
         -------
-        out : list
+        List[int]
             Path sequence for the given node pair if successful
         """
 
@@ -282,7 +285,7 @@ class PreferredPath():
         prev.append(loc)
         return prev
 
-    def _next_loc_fn(self, source, target, loc, prev, remaining):
+    def _next_loc_fn(self, source: int, target: int, loc: int, prev: List[int], remaining: np.ndarray) -> int:
         """
         Returns the next location (node) in a preferred path
 
@@ -294,14 +297,14 @@ class PreferredPath():
             Target node
         loc : int
             Current location
-        prev : list
+        prev : List[int]
             Path sequence so far (excluding 'loc')
-        remaining : numpy.ndarray
+        remaining : np.ndarray
             Boolean vector containing which nodes can be chosen from
 
         Returns
         -------
-        out : int
+        int
             Next location
         """
 
@@ -316,7 +319,7 @@ class PreferredPath():
             return best_cand[0]
         return np.random.choice(best_cand)
 
-    def _get_total_scores(self, loc, candidates, prev, target):
+    def _get_total_scores(self, loc: int, candidates: np.ndarray, prev: List[int], target: int) -> np.ndarray:
         """
         Returns the overall scores for nodes as the next location in a preferred path
 
@@ -324,12 +327,17 @@ class PreferredPath():
         ----------
         loc : int
             Current location
-        candidates : numpy.ndarray
+        candidates : np.ndarray
             Nodes that can be selected as the next location
-        prev : list
+        prev : List[int]
             Path sequence so far (excluding 'loc')
         target : int
             Target node (last node in the path, not necessarily in 'candidates')
+
+        Returns
+        -------
+        np.ndarray
+            Overall scores for each potential next node
         """
 
         num_cand = candidates.size
@@ -340,7 +348,7 @@ class PreferredPath():
         return total_scores
 
     @staticmethod
-    def _get_temp_scores(fn, num_cand, loc, candidates, prev, target):
+    def _get_temp_scores(fn: 'function', num_cand: int, loc: int, candidates: np.ndarray, prev: List[int], target: int) -> np.ndarray:
         """
         Returns the single function score for nodes as the next location in a preferred path
 
@@ -352,16 +360,16 @@ class PreferredPath():
             Number of nodes to choose from for the next location
         loc : int
             Current location
-        candidates : numpy.ndarray
+        candidates : np.ndarray
             Nodes that can be selected as the next location
-        prev : list
+        prev : List[int]
             Path sequence so far (excluding 'loc')
         target : int
             Target node (last node in the path, not necessarily in 'candidates')
 
         Returns
         -------
-        out : numpy.ndarray
+        np.ndarray
             Vector of node scores for a single function
         """
 
@@ -373,7 +381,7 @@ class PreferredPath():
             return scores / score_max
         return scores
 
-    def _convert_method_to_fn(self, method):
+    def _convert_method_to_fn(self, method: str) -> 'function':
         """
         Returns the relevant function for the requested path navigation method
 
@@ -386,8 +394,13 @@ class PreferredPath():
 
         Returns
         -------
-        out : function
+        function
             Relevant function for the given method
+
+        Raises
+        ------
+        ValueError
+            If method name is invalid
         """
 
         if method == 'fwd': return self._fwd
@@ -396,9 +409,9 @@ class PreferredPath():
         else: raise ValueError("Invalid method")
 
     @staticmethod
-    def _path_dict(n):
+    def _path_dict(n: int) -> dict:
         """
-        Returns a two-layered dictionary with keys for each source node and empty dictionaries as values
+        Returns an empty two-layered dictionary with keys for each source node and empty dictionaries as values
 
         Parameters
         ----------
@@ -407,8 +420,8 @@ class PreferredPath():
 
         Returns
         -------
-        out : dict
-            Two-layered dictionary
+        dict
+            Two-layered empty path dictionary
         """
 
         M = {}
