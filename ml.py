@@ -411,7 +411,7 @@ def sample_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, sample: int, sample_i
     Returns
     -------
     Tuple[torch.Tensor, torch.Tensor]
-        Tuple containing the average reward and success
+        Tuple containing the average reward and success as single element tensors
     """
 
     rewards = torch.zeros(sample, dtype=torch.float).to(device)
@@ -436,9 +436,30 @@ def sample_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, sample: int, sample_i
     return rewards.mean(), success.mean()
 
 
-def full_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, path_method: str):
+def full_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, path_method: str) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Returns the average reward and success from all edges in a Brain
+
+    Parameters
+    ----------
+    pp : PreferredPath
+        Preferred path algorithm for the brain
+    sp : torch.Tensor
+        Shortest paths matrix for the brain
+    path_method : str
+        See 'reinforce' for more information
+
+    Returns
+    -------
+    Tuple[torch.Tensor, torch.Tensor]
+        Tuple containing the average reward and success as single element tensors
+    """
+
+    # Predict where a path exists
     mask = torch.where(sp > 0)
-    pred = pp.retrieve_all_paths(method=path_method)[mask].astype(np.float32)
+    pred = T(pp.retrieve_all_paths(method=path_method)[mask], dtype=torch.float).to(device)
+
+    # Extract average reward and success
     rewards = global_reward(pred, sp[mask])
     success = 1 - (pred == -1).sum() / len(pred)
     return rewards, success
