@@ -243,12 +243,13 @@ def global_reward(pred: np.ndarray, sp: np.ndarray) -> float:
     """
 
     # Local navigation efficiency ratio
-    local = torch.zeros(sp.size, dtype=torch.float).to(device)
-    mask = torch.where(pred != -1).to(device)
+    len_sp = len(sp)
+    local = torch.zeros(len_sp, dtype=torch.float).to(device)
+    mask = np.where(pred != -1)
     local[mask] = sp[mask] / pred[mask]
 
     # Global navigation efficiency ratio
-    return local.sum() / sp.size
+    return local.sum() / len_sp
 
 
 def local_reward(pred: int, sp: int) -> float:
@@ -436,8 +437,8 @@ def sample_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, sample: int, sample_i
 
 
 def full_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, path_method: str):
-    mask = torch.where(sp > 0).to(device)
-    pred = pp.retrieve_all_paths(method=path_method)[mask]
+    mask = torch.where(sp > 0)
+    pred = pp.retrieve_all_paths(method=path_method)[mask].astype(np.float32)
     rewards = global_reward(pred, sp[mask])
     success = 1 - (pred == -1).sum() / len(pred)
     return rewards, success
