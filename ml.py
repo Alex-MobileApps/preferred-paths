@@ -277,7 +277,7 @@ def local_reward(pred: int, sp: int) -> float:
     return 0
 
 
-def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epochs: int, batch: int, lr: float, sample: int = 0, plt_data: dict = None, save_path: str = None, save_freq: int = 1, log: bool = False, path_method: str = PreferredPath._DEF_METHOD) -> None:
+def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epochs: int, batch: int, lr: float, sample: int = 0, min_sig: float = 1, plt_data: dict = None, save_path: str = None, save_freq: int = 1, log: bool = False, path_method: str = PreferredPath._DEF_METHOD) -> None:
     """
     Runs the continuous policy gradient reinforce algorithm
 
@@ -297,6 +297,8 @@ def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epo
         Learning rate
     sample : int
         Number of path samples to take per brain (0 to use full brain)
+    min_sig : float
+        Minimum standard deviation for each criteria (pre scaling)
     plt_data : dict
         Dictionary to store data as the network progresses.
         Requires the keys: 'rewards', 'success', 'mu' and 'sig' with values being a list.
@@ -325,18 +327,18 @@ def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epo
         e = plt_data['epochs'] + 1
         if log:
             print(f'\r-- Epoch {e} --')
-        epoch_fn(pe, opt, data, batch, sample, num_fns, plt_data, log, path_method)
+        epoch_fn(pe=pe, opt=opt, data=data, batch=batch, sample=sample, min_sig=min_sig, num_fns=num_fns, plt_data=plt_data, log=log, path_method=path_method)
 
         # Save
         if save_path:
             if e % save_freq == 0:
-                save(save_path, pe, opt, plt_data)
+                save(path=save_path, pe=pe, opt=opt, plt_data=plt_data)
 
         if log:
             print('\rDone')
 
 
-def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batch: int, sample: int, num_fns: int, plt_data: dict, log: bool, path_method: str):
+def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batch: int, sample: int, min_sig: float, num_fns: int, plt_data: dict, log: bool, path_method: str):
     """
     Performs an epoch of training
 
@@ -356,7 +358,7 @@ def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batc
 
         # Find criteria mu and sig
         probs = pe.predict(adj)
-        mu, sig = probs[:,:num_fns], abs(probs[:,num_fns:]) + 1
+        mu, sig = probs[:,:num_fns], abs(probs[:,num_fns:]) + min_sig
 
         # Sample a set of criteria weights
         N = Normal(mu, sig)
@@ -367,10 +369,10 @@ def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batc
             if log:
                 print(f'\r{str(i+1+offset)}', end='')
             pp[i].fn_weights = actions[i].tolist()
-            rewards[i], success[i] = sample_batch_fn(pp[i], sp[i], sample, sample_idx[i], path_method) if sample > 0 else full_batch_fn(pp[i], sp[i], sample_idx[i], path_method)
+            rewards[i], success[i] = sample_batch_fn(pp=pp[i], sp=sp[i], sample=sample, sample_idx=sample_idx[i], path_method=path_method) if sample > 0 else full_batch_fn(pp=pp[i], sp=sp[i], sample_idx=sample_idx[i], path_method=path_method)
 
         # Step
-        step_fn(opt, N, actions, rewards)
+        step_fn(opt=opt, N=N, actions=actions, rewards=rewards)
 
         # Update plotting data
         if plt_data is not None:
@@ -430,7 +432,7 @@ def sample_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, sample: int, sample_i
 
         # Compute rewards and success
         pred = PreferredPath._single_path_formatted(path_method, s, t, False)
-        rewards[i] = local_reward(pred, sp[s,t])
+        rewards[i] = local_reward(pred=pred, sp=sp[s,t])
         success[i] = pred != -1
 
     # Compute average reward and success
@@ -466,7 +468,7 @@ def full_batch_fn(pp: 'PreferredPath', sp: torch.Tensor, sample_idx: np.ndarray,
         pred[i] = PreferredPath._single_path_formatted(path_method, s, t, False)
 
     # Compute average reward and success
-    rewards = global_reward(pred, sp[sample_idx[:,0],sample_idx[:,1]])
+    rewards = global_reward(pred=pred, sp=sp[sample_idx[:,0],sample_idx[:,1]])
     success = 1 - (pred == -1).sum() / len(pred)
     return rewards, success
 
