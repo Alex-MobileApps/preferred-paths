@@ -31,6 +31,7 @@ class BrainDataset():
         fns : List[str]
             List of strings with the function name to use for ML. Valid functions include:
             'streamlines', 'node_str', 'target_node', 'target_region', 'hub', 'neighbour_just_visited_node', 'edge_con_diff_region', 'inter_regional_connections', 'prev_visited_region', 'target_func_region', 'edge_con_diff_func_region', 'prev_visited_func_region'
+            And their 'anti' versions, e.g. 'anti_streamlines', 'anti_node_str', etc.
         fn_weights : List[int], optional
             Initial criteria function weights, by default None
             If None, random weights will be generated instead
