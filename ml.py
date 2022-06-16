@@ -406,14 +406,9 @@ def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batc
         if plt_data is not None:
             plt_data['rewards'].append(rewards.mean().item())
             plt_data['success'].append(success.mean())
-
-            # Rescale to range -1 <= mu <= 1 for results
-            max_mu = abs(mu).max(axis=1)[0].reshape(-1,1)
-            scaled_mu = mu / max_mu
-            scaled_sig = sig / max_mu # Var(aX) = a^2 Var(X)
             for j in range(num_fns):
-                plt_data['mu'][j].append(scaled_mu[:,j].mean().item())
-                plt_data['sig'][j].append(scaled_sig[:,j].mean().item())
+                plt_data['mu'][j].append(mu[:,j].mean().item())
+                plt_data['sig'][j].append(sig[:,j].mean().item())
 
         # Run next batch
         offset += batch
