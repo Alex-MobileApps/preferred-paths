@@ -101,9 +101,9 @@ class BrainDataset():
 
         if name.startswith('anti_'):
             name = name[5:]
-            mult = -1 # Penalise criteria
+            mult = -1 # Penalise non-anti version
         else:
-            mult = 1 # Reward criteria
+            mult = 1 # Reward non-anti version
         if name == 'streamlines':
             vals = brain.streamlines()
             return lambda loc, nxt, prev_nodes, target: mult * vals[loc,nxt]
