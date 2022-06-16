@@ -26,6 +26,7 @@ if __name__ == "__main__":
     add('seed', None, int)
     add('nnweight', None, float)
     add('constsig', None, float)
+    add('posonly', False, bool)
     add_list('fns')
     args = vars(parser.parse_args())
 
@@ -46,6 +47,7 @@ if __name__ == "__main__":
     seed = args['seed']
     nn_init_weight = args['nnweight']
     const_sig = args['constsig']
+    pos_only = args['posonly']
     fns = args['fns']
     num_fns = len(fns)
 
@@ -103,4 +105,4 @@ if __name__ == "__main__":
     if log: print('====================')
 
     # Reinforce and save after each epoch
-    reinforce(pe=pe, opt=opt, data=train_data, epochs=epoch, batch=batch, sample=sample, lr=lr, const_sig=const_sig, plt_data=plt_data, save_path=save_path, save_freq=save_freq, log=log, path_method=path_method)
+    reinforce(pe=pe, opt=opt, data=train_data, epochs=epoch, batch=batch, sample=sample, lr=lr, const_sig=const_sig, pos_only=pos_only, plt_data=plt_data, save_path=save_path, save_freq=save_freq, log=log, path_method=path_method)
