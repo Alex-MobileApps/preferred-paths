@@ -284,7 +284,7 @@ def local_reward(pred: int, sp: int) -> float:
     return 0
 
 
-def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epochs: int, batch: int, lr: float, sample: int = 0, min_sig: float = 1, plt_data: dict = None, save_path: str = None, save_freq: int = 1, log: bool = False, path_method: str = PreferredPath._DEF_METHOD) -> None:
+def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epochs: int, batch: int, lr: float, sample: int = 0, min_sig: float = 1, pos_only: bool = False, plt_data: dict = None, save_path: str = None, save_freq: int = 1, log: bool = False, path_method: str = PreferredPath._DEF_METHOD) -> None:
     """
     Runs the continuous policy gradient reinforce algorithm
 
@@ -306,6 +306,11 @@ def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epo
         Number of path samples to take per brain (0 to use full brain)
     min_sig : float
         Minimum standard deviation for each criteria (pre scaling)
+    pos_only : bool, optional
+        Whether or not to take the absolute value of criteria weights, by default False
+        Only use when mixing regular and anti criteria
+        - If a criteria is known to produce a positive weight (e.g. target node), the anti criteria isn't required
+        - If a criteria may produce a negative weight, the anti criteria is required (the negative weighted version will then plateau at 0 instead of overlapping)
     plt_data : dict
         Dictionary to store data as the network progresses.
         Requires the keys: 'rewards', 'success', 'mu' and 'sig' with values being a list.
@@ -334,7 +339,7 @@ def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epo
         e = plt_data['epochs'] + 1
         if log:
             print(f'\r-- Epoch {e} --')
-        epoch_fn(pe=pe, opt=opt, data=data, batch=batch, sample=sample, min_sig=min_sig, num_fns=num_fns, plt_data=plt_data, log=log, path_method=path_method)
+        epoch_fn(pe=pe, opt=opt, data=data, batch=batch, sample=sample, min_sig=min_sig, num_fns=num_fns, pos_only=pos_only, plt_data=plt_data, log=log, path_method=path_method)
 
         # Save
         if save_path:
@@ -345,7 +350,7 @@ def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epo
             print('\rDone')
 
 
-def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batch: int, sample: int, min_sig: float, num_fns: int, plt_data: dict, log: bool, path_method: str):
+def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batch: int, sample: int, min_sig: float, num_fns: int, pos_only: bool, plt_data: dict, log: bool, path_method: str):
     """
     Performs an epoch of training
 
@@ -366,6 +371,8 @@ def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batc
         # Find criteria mu and sig
         probs = pe.predict(adj)
         mu, sig = probs[:,:num_fns], abs(probs[:,num_fns:]) + min_sig
+        if pos_only:
+            mu = abs(mu)
 
         # Sample a set of criteria weights
         N = Normal(mu, sig)
