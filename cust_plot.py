@@ -17,14 +17,16 @@ def plot_rewards(ax, plt_data, plt_avg=None, plt_off=0, plt_subtitle='', loc='be
     y = plt_data['rewards']
     plt_title = 'Rewards vs. batches'
     ylab = 'Navigation efficiency ratio'
-    _default_cust_plot(ax=ax, plt_data=plt_data, y=y, plt_off=plt_off, plt_avg=plt_avg, plt_title=plt_title, plt_subtitle=plt_subtitle, ylab=ylab, loc=loc)
+    labels = ['rewards']
+    _default_cust_plot(ax=ax, plt_data=plt_data, y=y, plt_off=plt_off, plt_avg=plt_avg, plt_title=plt_title, plt_subtitle=plt_subtitle, ylab=ylab, loc=loc, labels=labels)
 
 
 def plot_success(ax, plt_data, plt_avg=None, plt_off=0, plt_subtitle='', loc='best', **kwargs):
     y = plt_data['success']
     plt_title = 'Success ratio vs. batches'
     ylab = 'Success ratio'
-    _default_cust_plot(ax=ax, plt_data=plt_data, y=y, plt_off=plt_off, plt_avg=plt_avg, plt_title=plt_title, plt_subtitle=plt_subtitle, ylab=ylab, loc=loc)
+    labels = ['success']
+    _default_cust_plot(ax=ax, plt_data=plt_data, y=y, plt_off=plt_off, plt_avg=plt_avg, plt_title=plt_title, plt_subtitle=plt_subtitle, ylab=ylab, loc=loc, labels=labels)
 
 
 def plot_mu(ax, plt_data, plt_off=0, plt_subtitle='', loc='best', **kwargs):
@@ -46,9 +48,10 @@ def plot_pdf(ax, plt_data, plt_subtitle='', loc='center right', **kwargs):
         title=f"Probability density function for criteria weights{plt_subtitle}", loc=loc)
 
 
-def _default_cust_plot(ax, plt_data, y, plt_off=0, plt_avg=None, plt_title='', plt_subtitle='', xlab='Batches', ylab='', loc='best'):
+def _default_cust_plot(ax, plt_data, y, plt_off=0, plt_avg=None, plt_title='', plt_subtitle='', xlab='Batches', ylab='', loc='best', labels=None):
     x = np.arange(len(plt_data['rewards'])) + 1
-    labels = plt_data['fns']
+    if labels is None:
+        labels = plt_data['fns']
     _cust_plot(ax=ax, x=x, y=y, title=f'{plt_title}{plt_subtitle}', xlab=xlab, ylab=ylab, labels=labels, off=plt_off, avg=plt_avg, loc=loc)
 
 
