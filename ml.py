@@ -82,7 +82,8 @@ class BrainDataset():
         ----------
         name : str
             Criteria function name
-            Avaiable names: 'streamlines', 'node_str', 'target_node', 'target_region', 'hub', 'neighbour_just_visited_node', 'edge_con_diff_region', 'inter_regional_connections', 'prev_visited_region', 'target_func_region', 'edge_con_diff_func_region', 'prev_visited_func_region', 'inter_func_regional_connections', 'rand_walk', 'closest_to_target'
+            Available names: 'streamlines', 'node_str', 'target_node', 'target_region', 'hub', 'neighbour_just_visited_node', 'edge_con_diff_region', 'inter_regional_connections', 'prev_visited_region', 'target_func_region', 'edge_con_diff_func_region', 'prev_visited_func_region', 'inter_func_regional_connections', 'rand_walk', 'closest_to_target'
+            And their 'anti' versions, e.g. 'anti_streamlines', 'anti_node_str', etc.
         brain : Brain
             Brain to get the criteria function for
 
@@ -97,50 +98,55 @@ class BrainDataset():
             If criteria name is invalid
         """
 
+        if name.startswith('anti_'):
+            name = name[5:]
+            mult = -1 # Penalise criteria
+        else:
+            mult = 1 # Reward criteria
         if name == 'streamlines':
             vals = brain.streamlines()
-            return lambda loc, nxt, prev_nodes, target: vals[loc,nxt]
+            return lambda loc, nxt, prev_nodes, target: mult * vals[loc,nxt]
         if name == 'node_str':
             vals = brain.node_strength(weighted=True)
-            return lambda loc, nxt, prev_nodes, target: vals[nxt]
+            return lambda loc, nxt, prev_nodes, target: mult * vals[nxt]
         if name == 'target_node':
             vals = brain.is_target_node
-            return lambda loc, nxt, prev_nodes, target: vals(nxt, target)
+            return lambda loc, nxt, prev_nodes, target: mult * vals(nxt, target)
         if name == 'target_region':
             vals = brain.is_target_region
-            return lambda loc, nxt, prev_nodes, target: vals(nxt, target)
+            return lambda loc, nxt, prev_nodes, target: mult * vals(nxt, target)
         if name == 'hub':
             vals = brain.hubs(binary=True)
-            return lambda loc, nxt, prev_nodes, target: vals[nxt]
+            return lambda loc, nxt, prev_nodes, target: mult * vals[nxt]
         if name == 'neighbour_just_visited_node':
             vals = brain.neighbour_just_visited_node
-            return lambda loc, nxt, prev_nodes, target: vals(nxt, prev_nodes)
+            return lambda loc, nxt, prev_nodes, target: mult * vals(nxt, prev_nodes)
         if name == 'edge_con_diff_region':
             vals = brain.edge_con_diff_region
-            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, target)
+            return lambda loc, nxt, prev_nodes, target: mult * vals(loc, nxt, target)
         if name == 'inter_regional_connections':
             vals = brain.inter_regional_connections(weighted=False, distinct=True)
-            return lambda loc, nxt, prev_nodes, target: vals[nxt]
+            return lambda loc, nxt, prev_nodes, target: mult * vals[nxt]
         if name == 'prev_visited_region':
             vals = brain.prev_visited_region
-            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, prev_nodes)
+            return lambda loc, nxt, prev_nodes, target: mult * vals(loc, nxt, prev_nodes)
         if name == 'target_func_region':
             vals = brain.is_target_func_region
-            return lambda loc, nxt, prev_nodes, target: vals(nxt, target)
+            return lambda loc, nxt, prev_nodes, target: mult * vals(nxt, target)
         if name == 'edge_con_diff_func_region':
             vals = brain.edge_con_diff_func_region
-            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, target)
+            return lambda loc, nxt, prev_nodes, target: mult * vals(loc, nxt, target)
         if name == 'prev_visited_func_region':
             vals = brain.prev_visited_func_region
-            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, prev_nodes)
+            return lambda loc, nxt, prev_nodes, target: mult * vals(loc, nxt, prev_nodes)
         if name == 'inter_func_regional_connections':
             vals = brain.inter_func_regional_connections(weighted=False, distinct=True)
-            return lambda loc, nxt, prev_nodes, target: vals[nxt]
+            return lambda loc, nxt, prev_nodes, target: mult * vals[nxt]
         if name == 'rand_walk':
-            return lambda loc, nxt, prev_nodes, target: 1
+            return lambda loc, nxt, prev_nodes, target: mult * 1
         if name == 'closest_to_target':
             vals = brain.closest_to_target
-            return lambda loc, nxt, prev_nodes, target: vals(loc, nxt, target)
+            return lambda loc, nxt, prev_nodes, target: mult * vals(loc, nxt, target)
         raise ValueError(f'{name} is an invalid function')
 
 
