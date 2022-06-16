@@ -26,7 +26,7 @@ if __name__ == "__main__":
     add('seed', None, int)
     add('nnweight', None, float)
     add('constsig', None, float)
-    add('posonly', False, bool)
+    add('posonly', False, bool, const=True)
     add_list('fns')
     args = vars(parser.parse_args())
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # Print summary of selected input arguments
     print('\n====================')
     subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
-    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', f'path_method = {path_method}', f'rand_seed = {seed}', f'nn_init_weight = {nn_init_weight}', f'const_sig = {const_sig}', f'Functions = {num_fns} ({", ".join([f for f in fns])})', sep='\n')
+    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', f'path_method = {path_method}', f'rand_seed = {seed}', f'nn_init_weight = {nn_init_weight}', f'const_sig = {const_sig}', f'pos_only = {pos_only}', f'Functions = {num_fns} ({", ".join([f for f in fns])})', sep='\n')
     print('====================', flush=True)
     if log:
         print('Reading files...')
