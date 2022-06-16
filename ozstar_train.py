@@ -25,7 +25,7 @@ if __name__ == "__main__":
     add('pathmethod', PreferredPath._DEF_METHOD, str)
     add('seed', None, int)
     add('nnweight', None, float)
-    add('minsig', 1, float)
+    add('constsig', None, float)
     add_list('fns')
     args = vars(parser.parse_args())
 
@@ -45,14 +45,14 @@ if __name__ == "__main__":
     path_method = args['pathmethod']
     seed = args['seed']
     nn_init_weight = args['nnweight']
-    min_sig = args['minsig']
+    const_sig = args['constsig']
     fns = args['fns']
     num_fns = len(fns)
 
     # Print summary of selected input arguments
     print('\n====================')
     subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
-    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', f'path_method = {path_method}', f'rand_seed = {seed}', f'nn_init_weight = {nn_init_weight}', f'min_sig = {min_sig}', f'Functions = {num_fns} ({", ".join([f for f in fns])})', sep='\n')
+    print(f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'log_output = {log}', f'path_method = {path_method}', f'rand_seed = {seed}', f'nn_init_weight = {nn_init_weight}', f'const_sig = {const_sig}', f'Functions = {num_fns} ({", ".join([f for f in fns])})', sep='\n')
     print('====================', flush=True)
     if log:
         print('Reading files...')
@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     # Network parameters
     if log: print("Creating network...")
-    pe = PolicyEstimator(res=res, fn_len=num_fns, hidden_units=hidden_units, init_weight=nn_init_weight).to(device)
+    pe = PolicyEstimator(res=res, fn_len=num_fns, hidden_units=hidden_units, init_weight=nn_init_weight, const_sig=const_sig).to(device)
     opt = torch.optim.Adam(pe.network.parameters(), lr=lr)
 
     # Init new/load previous training data
@@ -103,4 +103,4 @@ if __name__ == "__main__":
     if log: print('====================')
 
     # Reinforce and save after each epoch
-    reinforce(pe=pe, opt=opt, data=train_data, epochs=epoch, batch=batch, sample=sample, lr=lr, min_sig=min_sig, plt_data=plt_data, save_path=save_path, save_freq=save_freq, log=log, path_method=path_method)
+    reinforce(pe=pe, opt=opt, data=train_data, epochs=epoch, batch=batch, sample=sample, lr=lr, const_sig=const_sig, plt_data=plt_data, save_path=save_path, save_freq=save_freq, log=log, path_method=path_method)

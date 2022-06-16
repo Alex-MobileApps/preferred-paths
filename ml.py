@@ -184,7 +184,7 @@ class BrainDataset():
 
 
 class PolicyEstimator(Module):
-    def __init__(self, res: int, fn_len: int, hidden_units: int = 20, init_weight: float = None):
+    def __init__(self, res: int, fn_len: int, hidden_units: int = 20, init_weight: float = None, const_sig: float = False):
         """
         Creates a neural network for a continuous action space policy gradient
 
@@ -199,11 +199,16 @@ class PolicyEstimator(Module):
         init_weight : float, optional
             Initial weight for all edges in the neural network, by default None
             If None, weights are set randomly
+        const_sig : float, optional
+            Set a fixed standard deviation sigma (pre-scaling) for each criteria, by default None
+            Affects the number of output units in the network and whether or not the standard deviation is learnt (None) or kept constant (not None)
         """
 
         super(PolicyEstimator, self).__init__()
         self.n_inputs = int(res * (res - 1) / 2)
-        self.n_outputs = fn_len * 2 # includes both mean and sigma
+        self.n_outputs = fn_len
+        if const_sig is None:
+            self.n_outputs *= 2 # includes both mean and sigma
 
         # Create neural network
         self.network = Sequential(
@@ -284,7 +289,7 @@ def local_reward(pred: int, sp: int) -> float:
     return 0
 
 
-def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epochs: int, batch: int, lr: float, sample: int = 0, min_sig: float = 1, pos_only: bool = False, plt_data: dict = None, save_path: str = None, save_freq: int = 1, log: bool = False, path_method: str = PreferredPath._DEF_METHOD) -> None:
+def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epochs: int, batch: int, lr: float, sample: int = 0, const_sig: float = None, pos_only: bool = False, plt_data: dict = None, save_path: str = None, save_freq: int = 1, log: bool = False, path_method: str = PreferredPath._DEF_METHOD) -> None:
     """
     Runs the continuous policy gradient reinforce algorithm
 
@@ -304,8 +309,9 @@ def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epo
         Learning rate
     sample : int
         Number of path samples to take per brain (0 to use full brain)
-    min_sig : float
-        Minimum standard deviation for each criteria (pre scaling)
+    const_sig : float, optional
+        Set a fixed standard deviation sigma (pre-scaling) for each criteria, by default None
+        If None, sigma will be learnt during training
     pos_only : bool, optional
         Whether or not to take the absolute value of criteria weights, by default False
         Only use when mixing regular and anti criteria
@@ -339,7 +345,7 @@ def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epo
         e = plt_data['epochs'] + 1
         if log:
             print(f'\r-- Epoch {e} --')
-        epoch_fn(pe=pe, opt=opt, data=data, batch=batch, sample=sample, min_sig=min_sig, num_fns=num_fns, pos_only=pos_only, plt_data=plt_data, log=log, path_method=path_method)
+        epoch_fn(pe=pe, opt=opt, data=data, batch=batch, sample=sample, const_sig=const_sig, num_fns=num_fns, pos_only=pos_only, plt_data=plt_data, log=log, path_method=path_method)
 
         # Save
         if save_path:
@@ -350,7 +356,7 @@ def reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epo
             print('\rDone')
 
 
-def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batch: int, sample: int, min_sig: float, num_fns: int, pos_only: bool, plt_data: dict, log: bool, path_method: str):
+def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batch: int, sample: int, const_sig: float, num_fns: int, pos_only: bool, plt_data: dict, log: bool, path_method: str):
     """
     Performs an epoch of training
 
@@ -363,16 +369,24 @@ def epoch_fn(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', batc
 
     t1 = datetime.now() # Track epoch duration
     offset = 0
+    if const_sig is not None:
+        sig = torch.ones((1,num_fns)) * const_sig
     while offset + batch <= len(data):
         rewards = torch.zeros((batch,1), dtype=torch.float).to(device)
         success = torch.zeros(batch, dtype=torch.float).to(device)
         adj, sp, pp, sample_idx = data[offset:offset+batch]
 
-        # Find criteria mu and sig
+        # Action
         probs = pe.predict(adj)
-        mu, sig = probs[:,:num_fns], abs(probs[:,num_fns:]) + min_sig
+
+        # Extract mu
+        mu = probs[:,:num_fns]
         if pos_only:
             mu = abs(mu)
+
+        # Extract sigma
+        if const_sig is None:
+            sig = abs(probs[:,num_fns:]) + 1
 
         # Sample a set of criteria weights
         N = Normal(mu, sig)
