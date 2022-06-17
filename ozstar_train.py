@@ -51,15 +51,21 @@ if __name__ == "__main__":
     fns = args['fns']
     num_fns = len(fns)
 
-    # Print and save summary of selected input arguments
+    # Extract selected input params
     summary = '\n====================\n'
     subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
     summary += '\n'.join([f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'save_frequency (epochs) = {save_freq}', f'log_output = {log}', f'path_method = {path_method}', f'rand_seed = {seed}', f'nn_init_weight = {nn_init_weight}', f'const_sig = {const_sig}', f'pos_only = {pos_only}', f'Functions = {num_fns} ({", ".join([f for f in fns])})'])
     summary += '\n===================='
+
+    # Write params to a txt file and print
     if save_path:
+        # Add 'params' prefix and write
+        ridx = save_path.rfind('/')
+        log_path = save_path[:ridx+1] + 'params_' + save_path[ridx+1:]
         with open(save_path + '.txt', 'w') as file:
             file.write(summary)
     print(summary, flush=True)
+
     if log:
         print('Reading files...')
 
