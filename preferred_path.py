@@ -376,7 +376,7 @@ class PreferredPath():
         scores = np.zeros(num_cand)
         for i in range(num_cand):
             scores[i] = fn(loc, candidates[i], prev, target)
-        score_max = scores.max()
+        score_max = abs(scores).max()
         if score_max != 0:
             return scores / score_max
         return scores
