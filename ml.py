@@ -184,7 +184,7 @@ class BrainDataset():
 
 
 class PolicyEstimator(Module):
-    def __init__(self, res: int, fn_len: int, hidden_units: int = 20, init_weight: float = None, const_sig: float = False):
+    def __init__(self, res: int, fn_len: int, hidden_units: int = 20, init_weight: float = None, const_sig: float = None):
         """
         Creates a neural network for a continuous action space policy gradient
 
