@@ -58,11 +58,11 @@ if __name__ == "__main__":
     summary += '\n===================='
 
     # Write params to a txt file and print
-    if save_path:
+    if save_path is not None:
         # Add 'params' prefix and write
         ridx = save_path.rfind('/')
         log_path = save_path[:ridx+1] + 'params_' + save_path[ridx+1:]
-        with open(save_path + '.txt', 'w') as file:
+        with open(log_path + '.txt', 'w') as file:
             file.write(summary)
     print(summary, flush=True)
 
