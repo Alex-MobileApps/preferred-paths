@@ -3,6 +3,8 @@ from scipy.stats import norm
 import matplotlib
 import matplotlib.pyplot as plt
 from typing import Tuple, List
+import torch
+from utils import device
 
 
 def plot(plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: str = '', figsize: Tuple[int,int] = (20,24), loc: str = None, scaled: bool = True) -> None:
@@ -43,6 +45,64 @@ def plot(plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: st
     def_plot(ax[1,0], plot_mu, scaled)
     def_plot(ax[1,1], plot_sig, scaled)
     plot_pdf(ax[2,0], plt_data, plt_subtitle=plt_subtitle, scaled=scaled)
+
+
+def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int = None, plt_off: int = 0, loc: str = None, scaled: bool = True, figsize: Tuple[int,int] = None, save_path: str = None) -> None:
+    """
+    Plots the training evolution of multiple experiments side by side
+
+    Parameters
+    ----------
+    paths : List[str]
+        Path to the data for each experiment
+    plt_title : str, optional
+        Header text for the plot, by default None
+    plt_avg : int, optional
+        Moving average size, by default None
+        If None, no moving average is plotted
+    plt_off : int, optional
+        Start index of the plot, by default 0
+    loc : str, optional
+        _description_, by default None
+    scaled : bool, optional
+        Whether or not to scale criteria weights so that they represent their percentage contribution instead of raw values, by default True
+    figsize : Tuple[int,int], optional
+        Size of the plot, by default None
+    save_path : str, optional
+        Where to save the plot, by default None
+        If None, plot will not be saved
+    """
+
+    # Create figure / axes
+    if figsize is None:
+        figsize = (len(paths)*10,40)
+    fig, ax = plt.subplots(5, len(paths), figsize=figsize)
+
+    # Fixed Plotting parameters
+    kwargs = {'plt_avg':plt_avg, 'plt_off':plt_off, 'scaled':scaled}
+    if loc is not None:
+        kwargs['loc'] = loc
+
+    # Plot each experiment
+    for col, path in enumerate(paths):
+        pass
+        plt_data = torch.load(path, map_location=device)
+        kwargs['plt_subtitle'] = f' (experiment {col+1}/{len(paths)})'
+        plot_rewards(ax[0,col], plt_data=plt_data, **kwargs)
+        plot_success(ax[1,col], plt_data=plt_data, **kwargs)
+        plot_mu(ax[2,col], plt_data=plt_data, **kwargs)
+        plot_sig(ax[3,col], plt_data=plt_data, **kwargs)
+        plot_pdf(ax[4,col], plt_data=plt_data, **kwargs)
+    plt.tight_layout()
+
+    # Add title
+    if plt_title is not None:
+        fig.subplots_adjust(top=0.96)
+        fig.suptitle(plt_title)
+
+    # Save
+    if save_path is not None:
+        plt.savefig(save_path, dpi=300)
 
 
 def plot_rewards(ax, plt_data, plt_avg=None, plt_off=0, plt_subtitle='', loc='lower right', **kwargs) -> None:
