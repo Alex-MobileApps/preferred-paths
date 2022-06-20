@@ -7,7 +7,7 @@ import torch
 from utils import device
 
 
-def plot(plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: str = '', figsize: Tuple[int,int] = (20,24), loc: str = None, scaled: bool = True) -> None:
+def plot(plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: str = '', figsize: Tuple[int,int] = (20,24), loc: str = None, scaled: bool = True, zero_line: bool = False) -> None:
     """
     Plot a summary of the rewards, success ratio, mu, sig and each criteria weight's probability density function in training
 
@@ -31,6 +31,8 @@ def plot(plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: st
         See 'matplotlib.pyplot.legend'
     scaled : bool, optional
         Whether to scale data so that criteria weights represent their percentage influence instead of raw values, by default True
+    zero_line : bool, optional
+        Whether or not to include a line to separate at mu = 0, by default False
     """
 
     # Create plot
@@ -42,9 +44,9 @@ def plot(plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: st
     # Add rewards, success, mu, sigma and pdf
     def_plot(ax[0,0], plot_rewards, False)
     def_plot(ax[0,1], plot_success, False)
-    def_plot(ax[1,0], plot_mu, scaled)
+    def_plot(ax[1,0], plot_mu, scaled, zero_line=zero_line)
     def_plot(ax[1,1], plot_sig, scaled)
-    plot_pdf(ax[2,0], plt_data, plt_subtitle=plt_subtitle, scaled=scaled)
+    plot_pdf(ax[2,0], plt_data, plt_subtitle=plt_subtitle, scaled=scaled, zero_line=zero_line)
 
 
 def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int = None, plt_off: int = 0, loc: str = None, scaled: bool = True, figsize: Tuple[int,int] = None, save_path: str = None) -> None:
@@ -85,7 +87,6 @@ def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int
 
     # Plot each experiment
     for col, path in enumerate(paths):
-        pass
         plt_data = torch.load(path, map_location=device)
         kwargs['plt_subtitle'] = f' (experiment {col+1}/{len(paths)})'
         plot_rewards(ax[0,col], plt_data=plt_data, **kwargs)
@@ -141,7 +142,7 @@ def plot_success(ax: matplotlib.axes.Axes, plt_data: dict, plt_avg: int = None, 
     _default_cust_plot(ax=ax, plt_data=plt_data, y=y, plt_off=plt_off, plt_avg=plt_avg, plt_title=plt_title, plt_subtitle=plt_subtitle, ylab=ylab, loc=loc, labels=labels)
 
 
-def plot_mu(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower left', scaled: bool = True, **kwargs) -> None:
+def plot_mu(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower left', scaled: bool = True, zero_line: bool = False, **kwargs) -> None:
     """
     Plot the evolution of mean criteria weights mu in training
 
@@ -149,6 +150,8 @@ def plot_mu(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subt
     ----------
     ax : matplotlib.axes.Axes
         The axes to plot on
+    zero_line : bool, optional
+        Whether or not to include a line to separate at mu = 0, by default False
     See 'cust_plot.plot' for more information on parameters
     """
 
@@ -156,7 +159,7 @@ def plot_mu(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subt
     y = np.array(plt_data['mu']) * scale
     plt_title = 'Mean criteria weight vs. batches'
     ylab = 'Mu'
-    _default_cust_plot(ax=ax, plt_data=plt_data, y=y, plt_off=plt_off, plt_title=plt_title, plt_subtitle=plt_subtitle, ylab=ylab, loc=loc)
+    _default_cust_plot(ax=ax, plt_data=plt_data, y=y, plt_off=plt_off, plt_title=plt_title, plt_subtitle=plt_subtitle, ylab=ylab, loc=loc, yzero_line=zero_line)
 
 
 def plot_sig(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'upper right', scaled: bool = True, **kwargs) -> None:
@@ -177,7 +180,7 @@ def plot_sig(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_sub
     _default_cust_plot(ax=ax, plt_data=plt_data, y=y, plt_off=plt_off, plt_title=plt_title, plt_subtitle=plt_subtitle, ylab=ylab, loc=loc)
 
 
-def plot_pdf(ax: matplotlib.axes.Axes, plt_data: dict, plt_subtitle: str = '', loc: str = 'center right', scaled: bool = True, **kwargs) -> None:
+def plot_pdf(ax: matplotlib.axes.Axes, plt_data: dict, plt_subtitle: str = '', loc: str = 'center right', scaled: bool = True, zero_line: bool = False, **kwargs) -> None:
     """
     Plot the proability density function of the criteria weights at the end of training
 
@@ -185,6 +188,8 @@ def plot_pdf(ax: matplotlib.axes.Axes, plt_data: dict, plt_subtitle: str = '', l
     ----------
     ax : matplotlib.axes.Axes
         The axes to plot on
+    zero_line : bool, optional
+        Whether or not to include a line to separate at mu = 0, by default False
     See 'cust_plot.plot' for more information on parameters
     """
 
@@ -198,13 +203,13 @@ def plot_pdf(ax: matplotlib.axes.Axes, plt_data: dict, plt_subtitle: str = '', l
     sig *= scale
 
     # Draw
-    xmax = max(abs((mu + 3 * sig).max()), abs((mu - 3 * sig).min()))
-    xmin = -xmax
-    step = 2 * xmax / 1000
+    xmax = (mu + 3 * sig).max()
+    xmin = (mu - 3 * sig).min()
+    step = (xmax - xmin) / 1000
     x = np.arange(xmin, xmax, step)
     y = [norm.pdf(x, mu[i], sig[i]) for i in range(len(mu))]
     _cust_plot(ax=ax, x=x, y=y, xlab='Weight', ylab='Probability Density', labels=plt_data['fns'], loc=loc,
-        plt_title=f"Probability density function for criteria weights{plt_subtitle}")
+        plt_title=f"Probability density function for criteria weights{plt_subtitle}", xzero_line=zero_line)
 
 
 def _get_mu_scale(mu: List[List[float]], scaled: bool) -> float:
@@ -227,7 +232,7 @@ def _get_mu_scale(mu: List[List[float]], scaled: bool) -> float:
     return 1 / abs(np.array(mu)).sum(axis=0) if scaled else 1
 
 
-def _default_cust_plot(ax: matplotlib.axes.Axes, plt_data: dict, y: 'List or np.ndarray', plt_off: int = 0, plt_avg: int = None, plt_title: str = '', plt_subtitle: str = '', xlab: str = 'Batches', ylab: str = '', loc: str = 'best', labels: List[str] = None, scaled: bool = False) -> None:
+def _default_cust_plot(ax: matplotlib.axes.Axes, plt_data: dict, y: 'List or np.ndarray', plt_off: int = 0, plt_avg: int = None, plt_title: str = '', plt_subtitle: str = '', xlab: str = 'Batches', ylab: str = '', loc: str = 'best', labels: List[str] = None, scaled: bool = False, xzero_line: bool = False, yzero_line: bool = False) -> None:
     """
     Used as a wrapper for plot_rewards, plot_success, plot_mu, plot_sigma and plot_pdf
     See 'cust_plot._cust_plot' for more information on parameters
@@ -236,10 +241,10 @@ def _default_cust_plot(ax: matplotlib.axes.Axes, plt_data: dict, y: 'List or np.
     x = np.arange(len(plt_data['rewards'])) + 1
     if labels is None:
         labels = plt_data['fns']
-    _cust_plot(ax=ax, x=x, y=y, plt_title=f'{plt_title}{plt_subtitle}', xlab=xlab, ylab=ylab, labels=labels, off=plt_off, avg=plt_avg, loc=loc)
+    _cust_plot(ax=ax, x=x, y=y, plt_title=f'{plt_title}{plt_subtitle}', xlab=xlab, ylab=ylab, labels=labels, off=plt_off, avg=plt_avg, loc=loc, xzero_line=xzero_line, yzero_line=yzero_line)
 
 
-def _cust_plot(ax: matplotlib.axes.Axes, x: 'List or np.ndarray', y: 'List or np.ndarray', plt_title: str = None, xlab: str = None, ylab: str = None, labels: List[str] = None, off: int = 0, avg: int = None, loc: str = 'best') -> None:
+def _cust_plot(ax: matplotlib.axes.Axes, x: 'List or np.ndarray', y: 'List or np.ndarray', plt_title: str = None, xlab: str = None, ylab: str = None, labels: List[str] = None, off: int = 0, avg: int = None, loc: str = 'best', xzero_line: bool = False, yzero_line: bool = False) -> None:
     """
     Used to an x vs. y plot on a matplotlib axis
 
@@ -266,6 +271,10 @@ def _cust_plot(ax: matplotlib.axes.Axes, x: 'List or np.ndarray', y: 'List or np
     loc : str, optional
         Position of the legend, by default 'best'
         See 'matplotlib.pyplot.legend'
+    xzero_line : bool, optional
+        Whether or not to include a vertical line at x=0, by default False
+    yzero_line : bool, optional
+        Whether or not to include a horizontal line at y=0, by default False
     """
 
     # Data extraction methods
@@ -291,6 +300,12 @@ def _cust_plot(ax: matplotlib.axes.Axes, x: 'List or np.ndarray', y: 'List or np
         if avg:
              x_avg, y_avg = _move_avg(yi, avg)
              ax.plot(x_avg + xi[0], y_avg, label=f'{label} {avg} point avg')
+
+    # Plot zero lines
+    if xzero_line:
+        ax.axvline(x=0, color='black', ls='--', lw=1)
+    if yzero_line:
+        ax.axhline(y=0, color='black', ls='--', lw=1)
 
     # Draw legend
     if labels:
