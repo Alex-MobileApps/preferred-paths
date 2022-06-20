@@ -108,7 +108,7 @@ def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int
         plt.savefig(save_path, dpi=300)
 
 
-def plot_summary(ax: matplotlib.axes.Axes, paths: List[str], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False) -> None:
+def plot_summary(ax: matplotlib.axes.Axes, paths: List[str], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False, plt_subtitle: str = '') -> None:
     """
     Plot a dot-plot summary of the final criteria weights mu after a number of experiments
 
@@ -161,10 +161,10 @@ def plot_summary(ax: matplotlib.axes.Axes, paths: List[str], scaled: bool = True
     ax.yaxis.set_ticks(np.arange(fn_len) * -1)
     ax.set_yticks(np.arange(fn_len) * -1, plt_data['fns'])
     ax.set_xlabel('Mu')
-    ax.set_title(f'Final mean criteria weights after {len(paths)} experiments')
+    ax.set_title(f'Final mean criteria weights after {len(paths)} experiments' + plt_subtitle)
 
 
-def plot_multi_summary(paths: List[List[str]], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False, plt_title: str = None, figsize: Tuple[int,int] = None, save_path: str = None):
+def plot_multi_summary(paths: List[List[str]], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False, plt_title: str = None, plt_subtitle: List[str] = None, figsize: Tuple[int,int] = None, save_path: str = None):
     """
     Plot a dot-plot summary of the final criteria weights mu after a number of experiments for multiple subjects
 
@@ -180,6 +180,8 @@ def plot_multi_summary(paths: List[List[str]], scaled: bool = True, alpha: float
         Whether or not to include a line to separate at mu = 0, by default False
     plt_title : str, optional
         Header text for the plot, by default None
+    plt_subtitle : str, optional
+        Text to add to the end of each individual axes title, by default None
     figsize : Tuple[int,int], optional
         Size of the plot, by default None
     save_path : str, optional
@@ -194,7 +196,8 @@ def plot_multi_summary(paths: List[List[str]], scaled: bool = True, alpha: float
 
     # Plot each experiment for each subject
     for i, subj_paths in enumerate(paths):
-        plot_summary(ax=ax[i], paths=subj_paths, scaled=scaled, alpha=alpha, zero_line=zero_line)
+        subj_subtitle = '' if plt_subtitle is None else plt_subtitle[i]
+        plot_summary(ax=ax[i], paths=subj_paths, scaled=scaled, alpha=alpha, zero_line=zero_line, plt_subtitle=subj_subtitle)
 
     # Align plots and set title
     fig.subplots_adjust(wspace=.5)
