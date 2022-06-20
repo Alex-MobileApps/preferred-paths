@@ -68,13 +68,13 @@ def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int
         _description_, by default None
     scaled : bool, optional
         Whether or not to scale criteria weights so that they represent their percentage contribution instead of raw values, by default True
+    zero_line : bool, optional
+        Whether or not to include a line to separate at mu = 0, by default False
     figsize : Tuple[int,int], optional
         Size of the plot, by default None
     save_path : str, optional
         Where to save the plot, by default None
         If None, plot will not be saved
-    zero_line : bool, optional
-        Whether or not to include a line to separate at mu = 0, by default False
     """
 
     # Create figure / axes
@@ -108,7 +108,106 @@ def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int
         plt.savefig(save_path, dpi=300)
 
 
-def plot_rewards(ax, plt_data, plt_avg=None, plt_off=0, plt_subtitle='', loc='lower right', **kwargs) -> None:
+def plot_summary(ax: matplotlib.axes.Axes, paths: List[str], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False) -> None:
+    """
+    Plot a dot-plot summary of the final criteria weights mu after a number of experiments
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes to plot on
+    paths : List[str]
+        Path to the data for each experiment
+    scaled : bool, optional
+        Whether or not to scale criteria weights so that they represent their percentage contribution instead of raw values, by default True
+    alpha : float, optional
+        Opacity of the dots in the plot, by default 0.7
+    zero_line : bool, optional
+        Whether or not to include a line to separate at mu = 0, by default False
+    """
+
+    # Parameters to be set during file reading
+    mu = None
+    fn_len = None
+    fns = None
+
+    # Extract exeriments
+    for i, path in enumerate(paths):
+        plt_data = torch.load(path, map_location=device)
+
+        # Get number of functions and setup mu
+        if mu is None:
+            fns = plt_data['fns']
+            fn_len = len(fns)
+            mu = np.zeros((fn_len, len(paths)))
+
+        # Extract final mu with fixed order across experiments
+        exp_mu = [data[-1] for data in plt_data['mu']]
+        for j, fn in enumerate(plt_data['fns']):
+            k = fns.index(fn)
+            mu[k,i] = exp_mu[j]
+
+    # Rescale mu
+    scale = _get_mu_scale(mu, scaled)
+    mu *= scale
+
+    # Plot summary of experiments
+    for i in range(fn_len):
+        ax.scatter(mu[i], -np.ones(len(paths)) * i, alpha=alpha, edgecolors=None, linewidths=0, linewidth=0, marker='o')
+    if zero_line:
+        ax.axvline(x=0, color='black', ls='--', lw=1)
+
+    # Plot title and labels
+    ax.yaxis.set_ticks(np.arange(fn_len) * -1)
+    ax.set_yticks(np.arange(fn_len) * -1, plt_data['fns'])
+    ax.set_xlabel('Mu')
+    ax.set_title(f'Final mean criteria weights after {len(paths)} experiments')
+
+
+def plot_multi_summary(paths: List[List[str]], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False, plt_title: str = None, figsize: Tuple[int,int] = None, save_path: str = None):
+    """
+    Plot a dot-plot summary of the final criteria weights mu after a number of experiments for multiple subjects
+
+    Parameters
+    ----------
+    paths : List[List[str]]
+        2D list, where each row is a list of paths to the data for each experiment related to that subject
+    scaled : bool, optional
+        Whether or not to scale criteria weights so that they represent their percentage contribution instead of raw values, by default True
+    alpha : float, optional
+        Opacity of the dots in the plot, by default 0.7
+    zero_line : bool, optional
+        Whether or not to include a line to separate at mu = 0, by default False
+    plt_title : str, optional
+        Header text for the plot, by default None
+    figsize : Tuple[int,int], optional
+        Size of the plot, by default None
+    save_path : str, optional
+        Where to save the plot, by default None
+        If None, plot will not be saved
+    """
+
+    # Create figure / axes
+    if figsize is None:
+        figsize = (len(paths) * 10, 8)
+    fig, ax = plt.subplots(1, len(paths), figsize=figsize)
+
+    # Plot each experiment for each subject
+    for i, subj_paths in enumerate(paths):
+        plot_summary(ax=ax[i], paths=subj_paths, scaled=scaled, alpha=alpha, zero_line=zero_line)
+
+    # Align plots and set title
+    fig.subplots_adjust(wspace=.5)
+    fig.subplots_adjust(top=0.93)
+    fig.suptitle(plt_title)
+    plt.tight_layout()
+
+    # Save
+    if save_path is not None:
+        plt.savefig(save_path, dpi=300)
+
+
+def plot_rewards(ax: matplotlib.axes.Axes, plt_data, plt_avg=None, plt_off=0, plt_subtitle='', loc='lower right', **kwargs) -> None:
     """
     Plot the evolution of the rewards (navigation efficiency) in training
 
