@@ -49,7 +49,7 @@ def plot(plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: st
     plot_pdf(ax[2,0], plt_data, plt_subtitle=plt_subtitle, scaled=scaled, zero_line=zero_line)
 
 
-def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int = None, plt_off: int = 0, loc: str = None, scaled: bool = True, figsize: Tuple[int,int] = None, save_path: str = None) -> None:
+def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int = None, plt_off: int = 0, loc: str = None, scaled: bool = True, zero_line: bool = False, figsize: Tuple[int,int] = None, save_path: str = None) -> None:
     """
     Plots the training evolution of multiple experiments side by side
 
@@ -73,6 +73,8 @@ def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int
     save_path : str, optional
         Where to save the plot, by default None
         If None, plot will not be saved
+    zero_line : bool, optional
+        Whether or not to include a line to separate at mu = 0, by default False
     """
 
     # Create figure / axes
@@ -81,7 +83,7 @@ def plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int
     fig, ax = plt.subplots(5, len(paths), figsize=figsize)
 
     # Fixed Plotting parameters
-    kwargs = {'plt_avg':plt_avg, 'plt_off':plt_off, 'scaled':scaled}
+    kwargs = {'plt_avg':plt_avg, 'plt_off':plt_off, 'scaled':scaled, 'zero_line':zero_line}
     if loc is not None:
         kwargs['loc'] = loc
 
