@@ -51,37 +51,32 @@ if __name__ == "__main__":
     fns = args['fns']
     num_fns = len(fns)
 
-    # Extract selected input params
-    summary = '\n====================\n'
+    # Extract selected input params for outputs
     subj_name = f'x{len(subj)}' if len(subj) > 1 else f's{str(subj[0] + 1).zfill(3)}'
-    summary += '\n'.join([f'Running with parameters:', f'device = {device}', f'res = {res}', f'subj = {subj_name}', f'epochs = {epoch}', f'batch_size = {batch}', f'samples = {sample}', f'hidden_units = {hidden_units}', f'lr = {lr}', f'save_path = {save_path}', f'load_path = {load_path}', f'save_frequency (epochs) = {save_freq}', f'log_output = {log}', f'path_method = {path_method}', f'rand_seed = {seed}', f'nn_init_weight = {nn_init_weight}', f'const_sig = {const_sig}', f'pos_only = {pos_only}', f'Functions = {num_fns} ({", ".join([f for f in fns])})'])
-    summary += '\n===================='
-
-    # Write params to a txt file and print
-    if save_path is not None:
-        # Add 'params' prefix and write
-        ridx = save_path.rfind('/')
-        log_path = save_path[:ridx+1] + 'params_' + save_path[ridx+1:]
-        with open(log_path + '.txt', 'w') as file:
-            file.write(summary)
-    print(summary, flush=True)
-
-    if log:
-        print('Reading files...')
+    params = {
+        'device': device,
+        'res': res,
+        'subj': subj_name,
+        'epochs': epoch,
+        'batch_size': batch,
+        'samples': sample,
+        'hidden_units': hidden_units,
+        'learning_rate': lr,
+        'save_path': save_path,
+        'load_path': load_path,
+        'save_frequency (epochs)': save_freq,
+        'log_output': log,
+        'path_method': path_method,
+        'rand_seed': seed,
+        'nn_initial_weight': nn_init_weight,
+        'const_sig': const_sig,
+        'pos_only': pos_only,
+        'functions': f'{num_fns} ({", ".join([f for f in fns])})'
+    }
 
     # Apply random seed
     if seed is not None:
         set_rand_seed(seed=seed)
-
-    # Read brain data
-    sc = loadmat(f'/fred/oz192/data_n484/subjfiles_SC{res}.mat')
-    fc = loadmat(f'/fred/oz192/data_n484/subjfiles_FC{res}.mat')
-    sc = np.array([sc[f's{str(z+1).zfill(3)}'] for z in subj])
-    fc = np.array([fc[f's{str(z+1).zfill(3)}'] for z in subj])
-    euc_dist = loadmat('/fred/oz192/euc_dist.mat')[f'eu{res}']
-    hubs = np.loadtxt(f'/fred/oz192/data_n484/hubs_{res}.txt', dtype=int, delimiter=',')
-    regions = np.loadtxt(f'/fred/oz192/data_n484/regions_{res}.txt', dtype=int, delimiter=',')
-    func_regions = np.loadtxt(f'/fred/oz192/data_n484/func_reg{res}.txt', dtype=int, delimiter=',')
 
     # Network parameters
     if log: print("Creating network...")
@@ -95,6 +90,7 @@ if __name__ == "__main__":
         pe.network.load_state_dict(plt_data.pop('model_state_dict'))
         opt.load_state_dict(plt_data.pop('optimizer_state_dict'))
         if plt_data['fns'] != fns: raise ValueError('Different function criteria loaded')
+        params['epochs'] += plt_data['epochs']
     else:
         # New
         plt_data = {
@@ -106,6 +102,29 @@ if __name__ == "__main__":
             'sig': [[] for _ in range(num_fns)],
             'fns': fns}
         plt_data['train_idx'], plt_data['cv_idx'], plt_data['test_idx'] = train_cv_test_split(M=subj, train_pct=0.6, cv_pct=0.2)
+
+    # Write params to a txt file and print
+    summary = '====================\n' + '\n'.join([f'{k} = {v}' for k, v in params.items()]) + '\n===================='
+    print(summary)
+    if save_path is not None:
+        # Add 'params' prefix and write
+        ridx = save_path.rfind('/')
+        log_path = save_path[:ridx+1] + 'params_' + save_path[ridx+1:]
+        with open(log_path + '.txt', 'w') as file:
+            file.write(summary)
+
+    if log:
+        print('Reading files...')
+
+    # Read brain data
+    sc = loadmat(f'/fred/oz192/data_n484/subjfiles_SC{res}.mat')
+    fc = loadmat(f'/fred/oz192/data_n484/subjfiles_FC{res}.mat')
+    sc = np.array([sc[f's{str(z+1).zfill(3)}'] for z in subj])
+    fc = np.array([fc[f's{str(z+1).zfill(3)}'] for z in subj])
+    euc_dist = loadmat('/fred/oz192/euc_dist.mat')[f'eu{res}']
+    hubs = np.loadtxt(f'/fred/oz192/data_n484/hubs_{res}.txt', dtype=int, delimiter=',')
+    regions = np.loadtxt(f'/fred/oz192/data_n484/regions_{res}.txt', dtype=int, delimiter=',')
+    func_regions = np.loadtxt(f'/fred/oz192/data_n484/func_reg{res}.txt', dtype=int, delimiter=',')
 
     # Train / test split
     if log: print('Loading brains...')
