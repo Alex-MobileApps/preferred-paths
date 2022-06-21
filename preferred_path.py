@@ -118,11 +118,12 @@ class PreferredPath():
         Parameters
         ----------
         method : str, optional
+            Path navigation type, by default 'fwd'
             'rev'  : Revisits allowed. If a revisit occurs, that the path sequence equals 'None' due to entering an infinite loop
             'fwd'  : Forward only, nodes cannot be revisited and backtracking isn't allowed
             'back' : Backtracking allowed, nodes cannot be revisited and backtracking to previous nodes occur at dead ends to find alternate routes
         out_path : bool, optional
-            Whether to output the full path sequence (True) or the number of hops in each path sequence (False)
+            Whether to output the full path sequence (True) or the number of hops in each path sequence (False), by default False
 
         Returns
         -------
@@ -150,11 +151,12 @@ class PreferredPath():
         target : int
             Target node
         method : str, optional
+            Path navigation type, by default 'fwd'
             'rev'  : Revisits allowed. If a revisit occurs, that the path sequence equals 'None' due to entering an infinite loop
             'fwd'  : Forward only, nodes cannot be revisited and backtracking isn't allowed
             'back' : Backtracking allowed, nodes cannot be revisited and backtracking to previous nodes occur at dead ends to find alternate routes
         out_path : bool, optional
-            Whether to output the full path sequence (True) or the number of hops in each the sequence (False)
+            Whether to output the full path sequence (True) or the number of hops in each the sequence (False), by default False
 
         Returns
         -------
