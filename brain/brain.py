@@ -2,6 +2,7 @@ import numpy as np
 from utils import binarise_matrix, validate_square, validate_thresh_type
 from math import pi, acos
 from scipy.sparse.csgraph import dijkstra
+from typing import List
 
 class Brain():
 
@@ -15,33 +16,38 @@ class Brain():
 
    # Constructor
 
-   def __init__(self, sc, fc, euc_dist, sc_directed=_DEF_SC_DIR, sc_thresh=_DEF_SC_THRESH, fc_thresh=_DEF_FC_THRESH, sc_thresh_type=_DEF_THRESH_TYPE, fc_thresh_type=_DEF_THRESH_TYPE, hubs=None, regions=None, func_regions=None):
+   def __init__(self, sc: np.ndarray, fc: np.ndarray, euc_dist: np.ndarray, sc_directed: bool = _DEF_SC_DIR, sc_thresh: float = _DEF_SC_THRESH, fc_thresh: float = _DEF_FC_THRESH, sc_thresh_type: str = _DEF_THRESH_TYPE, fc_thresh_type: str = _DEF_THRESH_TYPE, hubs: np.ndarray = None, regions: np.ndarray = None, func_regions: np.ndarray = None):
       """
       Contains weighted and binarised connectome matrices of a brain, as well as functions that compute features of these connectomes
 
       Parameters
       ----------
-      sc : numpy.ndarray
+      sc : np.ndarray
          Weighted structural connectivity matrix
-      fc : numpy.ndarray
+      fc : np.ndarray
          Weighted functional connectivity matrix
-      euc_dist : numpy.ndarray
+      euc_dist : np.ndarray
          Euclidean distances between each node pair
-      sc_directed : bool
-         Whether or not the SC layer is a directed graph or not
-      sc_thresh, fc_thresh : float
-         Threshold used to binarise SC and FC
-      sc_thresh_type, fc_thresh_type : str
-         Method used to binarise SC and FC matrices
+      sc_directed : bool, optional
+         Whether or not the SC layer is a directed graph or not, by default False
+      sc_thresh : float, optional
+         Threshold used to binarise SC, by default 1.0
+      fc_thresh : float, optional
+         Threshold used to binarise FC, by default 0.01
+      sc_thresh_type : str, optional
+         Method used to binarise the SC matrix, by default 'pos'
          - 'pos' : values less than thresh_val are given 0. Other values are given 1.
          - 'neg' : values greater than thresh_val are given 0. Other values are given 1.
          - 'abs' : absolute values less than the absolute value of thresh_val are given 0. Other values are given 1.
-      hubs : numpy.ndarray
-         Hub node indexes
-      regions : numpy.ndarray
-         Region (as an integer) that each node is assigned to
-      func_regions : numpy.ndarray
-         Functional network (as an integer) that each node is assigned to
+      fc_thresh_type : str, optional
+         Method used to binarise the FC matrix, by default 'pos'
+         See 'sc_thresh_type' for other values
+      hubs : np.ndarray, optional
+         Hub node indexes, by default None
+      regions : np.ndarray, optional
+         Region (as an integer) that each node is assigned to, by default None
+      func_regions : np.ndarray, optional
+         Functional network (as an integer) that each node is assigned to, by default None
       """
 
       self._sc_thresh = float(sc_thresh)
@@ -73,77 +79,77 @@ class Brain():
    # Properties
 
    @property
-   def sc(self):
+   def sc(self) -> np.ndarray:
       """
       Get the weighted SC matrix
       """
       return self._sc
 
    @property
-   def sc_bin(self):
+   def sc_bin(self) -> np.ndarray:
       """
       Get the binarised SC matrix
       """
       return self._sc_bin
 
    @property
-   def sc_thresh(self):
+   def sc_thresh(self) -> float:
       """
       Get the threshold used to create the binarised SC matrix
       """
       return self._sc_thresh
 
    @property
-   def sc_thresh_type(self):
+   def sc_thresh_type(self) -> str:
       """
       Get the threshold type used to create the binarised SC matrix
       """
       return self._sc_thresh_type
 
    @property
-   def sc_directed(self):
+   def sc_directed(self) -> bool:
       """
       Get whether or not the SC layer is a directed graph or not
       """
       return self._sc_directed
 
    @property
-   def fc(self):
+   def fc(self) -> np.ndarray:
       """
       Get the weighted FC matrix
       """
       return self._fc
 
    @property
-   def fc_bin(self):
+   def fc_bin(self) -> np.ndarray:
       """
       Get the binarised FC matrix
       """
       return self._fc_bin
 
    @property
-   def fc_thresh(self):
+   def fc_thresh(self) -> float:
       """
       Get the threshold used to create the binarised FC matrix
       """
       return self._fc_thresh
 
    @property
-   def fc_thresh_type(self):
+   def fc_thresh_type(self) -> str:
       """
       Get the threshold type used to create the binarised FC matrix
       """
       return self._fc_thresh_type
 
    @property
-   def euc_dist(self):
+   def euc_dist(self) -> np.ndarray:
       """
       Get the Euclidean distances matrix
       """
       return self._euc_dist
 
    @property
-   def res(self):
+   def res(self) -> int:
       """
       Get the parcellation resolution
       """
@@ -152,41 +158,41 @@ class Brain():
 
    # Measures in use
 
-   def streamlines(self, weighted=True):
+   def streamlines(self, weighted: bool = True) -> np.ndarray:
       """
       Returns the number of streamlines between any pair of nodes
 
       Parameters
       ----------
-      weighted : bool
-         Whether to use the weighted or unweighted SC matrix
+      weighted : bool, optional
+         Whether to use the weighted or unweighted SC matrix, by default True
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
          Matrix of streamlines
       """
 
       M = self.sc if weighted else self.sc_bin
       return M
 
-   def node_strength(self, weighted=True, method='tot'):
+   def node_strength(self, weighted: bool = True, method: str = 'tot') -> np.ndarray:
       """
       Returns the sum of edge weights adjacent to a node
 
       Parameters
       ----------
-      weighted : bool
-         Whether to use the weighted or unweighted SC matrix
-      method : str
-         Used if weighted=True
+      weighted : bool, optional
+         Whether to use the weighted or unweighted SC matrix, by default True
+      method : str, optional
+         Used if weighted=True, by default 'tot'
          - 'in'  : in-degree strengths only
          - 'out' : out-degree strengths only
          - 'tot' : combined in and out degree strengths
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
          Vector of strengths for each node
       """
 
@@ -200,7 +206,7 @@ class Brain():
       else:
          raise ValueError("Invalid method")
 
-   def is_target_node(self, nxt, target):
+   def is_target_node(self, nxt: int, target: int) -> int:
       """
       Returns whether or node the potential next node is the target node
 
@@ -213,24 +219,24 @@ class Brain():
 
       Returns
       -------
-      out : int
+      int
          Whether or not the potential next node is the target node (1 if true, 0 otherwise)
       """
 
       return int(nxt == target)
 
-   def hubs(self, binary=False):
+   def hubs(self, binary: bool = False) -> np.ndarray:
       """
       Returns the brain's hub nodes
 
       Parameters
       ----------
-      binary : bool
-         Whether to return the indexes of the hub nodes, or a binary array for all nodes indicating which ones are hubs
+      binary : bool, optional
+         Whether to return the indexes of the hub nodes (False), or a binary array for all nodes indicating which ones are hubs (True), by default False
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
          Binary vector indicating which nodes are hub nodes
       """
 
@@ -241,7 +247,7 @@ class Brain():
          M[self._hubs] = 1
          return M
 
-   def neighbour_just_visited_node(self, nxt, prev_nodes):
+   def neighbour_just_visited_node(self, nxt: int, prev_nodes: List[int]) -> int:
       """
       Returns whether or not a potential next node neighbours the most recently visited node
 
@@ -249,12 +255,12 @@ class Brain():
       ----------
       nxt : int
           Next node
-      prev_nodes : list
+      prev_nodes : List[int]
           Path sequence (containing previously visited nodes)
 
       Returns
       -------
-      out : int
+      int
           Whether or not the potential next node neighbours the just visited node (1 if true, 0 otherwise)
       """
 
@@ -264,7 +270,7 @@ class Brain():
 
    # Regions
 
-   def is_target_region(self, nxt, target):
+   def is_target_region(self, nxt: int, target: int) -> int:
       """
       Returns whether or not a potential next node is in the target node's region
 
@@ -277,13 +283,13 @@ class Brain():
 
       Returns
       -------
-      out : int
+      int
           Whether or not the potential next node is the target node's region (1 if true, 0 otherwise)
       """
 
       return Brain._is_targ_reg(self._regions, nxt, target)
 
-   def edge_con_diff_region(self, loc, nxt, target):
+   def edge_con_diff_region(self, loc: int, nxt: int, target: int) -> int:
       """
       Returns whether or not a potential next node leaves the current region, if it is not already in the target region
 
@@ -298,32 +304,32 @@ class Brain():
 
       Returns
       -------
-      out : int
+      int
           1 if leaving a non-target region or remaining in the target region, 0 otherwise
       """
 
       return Brain._edge_con_diff_reg(self._regions, loc, nxt, target)
 
-   def inter_regional_connections(self, weighted=True, distinct=False):
+   def inter_regional_connections(self, weighted: bool = True, distinct: bool = False) -> np.ndarray:
       """
       Returns how many connections each node has to different regions
 
       Parameters
       ----------
-      weighted : bool
-          Whether or not to sum the weights of the streamlines of the inter-regional connections
-      distinct : bool
-          Whether to count the number of distinct inter-regional connections or the total number of inter-regional connections (only used if weighted=False)
+      weighted : bool, optional
+          Whether or not to sum the weights of the streamlines of the inter-regional connections, by default True
+      distinct : bool, optional
+          Whether to count the number of distinct inter-regional connections or the total number of inter-regional connections (only used if weighted=False), by default False
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
           How many inter-regional connections each node has
       """
 
       return self._int_reg_con(self._regions, weighted, distinct)
 
-   def prev_visited_region(self, loc, nxt, prev_nodes):
+   def prev_visited_region(self, loc: int, nxt: int, prev_nodes: List[int]) -> int:
       """
       Returns whether or not the region of a potential next node has already been visited, unless it remains in the same region
 
@@ -333,12 +339,12 @@ class Brain():
           Current node
       nxt : int
           Next node
-      prev_nodes : list
+      prev_nodes : List[int]
           Path sequence (containing previously visited nodes)
 
       Returns
       -------
-      out : int
+      int
           Whether or not the region of the potential next has already been visited (1 if already visited and not in the current region, 0 otherwise)
       """
 
@@ -346,7 +352,7 @@ class Brain():
 
    # Functional regions
 
-   def is_target_func_region(self, nxt, target):
+   def is_target_func_region(self, nxt: int, target: int) -> int:
       """
       Returns whether or not a potential next node is in the target node's functional region
 
@@ -359,13 +365,13 @@ class Brain():
 
       Returns
       -------
-      out : int
+      int
           Whether or not the potential next node is the target node's functional region (1 if true, 0 otherwise)
       """
 
       return Brain._is_targ_reg(self._func_regions, nxt, target)
 
-   def edge_con_diff_func_region(self, loc, nxt, target):
+   def edge_con_diff_func_region(self, loc: int, nxt: int, target: int) -> int:
       """
       Returns whether or not a potential next node leaves the current functional region, if it is not already in the target functional region
 
@@ -380,13 +386,13 @@ class Brain():
 
       Returns
       -------
-      out : int
+      int
           1 if leaving a non-target functional region or remaining in the target functional region, 0 otherwise
       """
 
       return Brain._edge_con_diff_reg(self._func_regions, loc, nxt, target)
 
-   def prev_visited_func_region(self, loc, nxt, prev_nodes):
+   def prev_visited_func_region(self, loc: int, nxt: int, prev_nodes: List[int]) -> int:
       """
       Returns whether or not the functional region of a potential next node has already been visited, unless it remains in the same functional region
 
@@ -396,31 +402,31 @@ class Brain():
           Current node
       nxt : int
           Next node
-      prev_nodes : list
+      prev_nodes : List[int]
           Path sequence (containing previously visited nodes)
 
       Returns
       -------
-      out : int
+      int
           Whether or not the functional region of the potential next has already been visited (1 if already visited and not in the current functional region, 0 otherwise)
       """
 
       return Brain._prev_vis_reg(self._func_regions, loc, nxt, prev_nodes)
 
-   def inter_func_regional_connections(self, weighted=True, distinct=False):
+   def inter_func_regional_connections(self, weighted: bool = True, distinct: bool = False) -> np.ndarray:
       """
       Returns how many connections each node has to different functional regions
 
       Parameters
       ----------
-      weighted : bool
-          Whether or not to sum the weights of the streamlines of the inter-functional-regional connections
-      distinct : bool
-          Whether to count the number of distinct inter-functional-regional connections or the total number of inter-functional-regional connections (only used if weighted=False)
+      weighted : bool, optional
+          Whether or not to sum the weights of the streamlines of the inter-functional-regional connections, by default True
+      distinct : bool, optional
+          Whether to count the number of distinct inter-functional-regional connections or the total number of inter-functional-regional connections (only used if weighted=False), by default False
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
           How many inter-functional-regional connections each node has
       """
 
@@ -428,19 +434,19 @@ class Brain():
 
    # Measures not in use
 
-   def edge_length(self):
+   def edge_length(self) -> np.ndarray:
       """
       Returns the Euclidean distance between all pairs of adjacent nodes
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
          Matrix of edge lengths
       """
 
       return self.euc_dist
 
-   def edge_angle_change(self, loc, nxt, prev_nodes):
+   def edge_angle_change(self, loc: int, nxt: int, prev_nodes: List[int]) -> float:
       """
       Returns the magnitude of the deviation from the previous edges direction (radians)
 
@@ -450,12 +456,12 @@ class Brain():
          Current node
       nxt : int
          Next node
-      prev_nodes : list
+      prev_nodes : List[int]
          Path sequence (excluding current node)
 
       Returns
       -------
-      out : float
+      float
          Magnitude of deviation (radians)
       """
 
@@ -467,49 +473,49 @@ class Brain():
       cosc = (a ** 2 + b ** 2 - c ** 2) / (2 * a * b)
       return pi - acos(cosc)
 
-   def node_strength_dissimilarity(self, weighted=True, method='tot'):
+   def node_strength_dissimilarity(self, weighted: bool = True, method: str = 'tot') -> np.ndarray:
       """
       Returns the magnitude of the difference in the sum of edge weights of any pair of nodes
 
       Parameters
       ----------
-      weighted : bool
-         Whether to use the weighted or unweighted SC matrix
-      method : str
-         Used if weighted=True
+      weighted : bool, optional
+         Whether to use the weighted or unweighted SC matrix, by default True
+      method : str, optional
+         Used if weighted=True, by default 'tot'
          - 'in'  : in-degree strengths only
          - 'out' : out-degree strengths only
          - 'tot' : combined in and out degree strengths
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
          Matrix of node strength dissimilarity
       """
 
       M = self.node_strength(weighted, method)
       return abs(M.reshape(-1,1) - M.T)
 
-   def triangle_node_prevalence(self):
+   def triangle_node_prevalence(self) -> np.ndarray:
       """
       Returns the number of SC-FC triangles centred (apex) on each node
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
          Vector of SC-FC triangle node prevalances
       """
 
       T = (self.sc_bin @ (self.fc_bin * (1 - self.sc_bin.T)) @ self.sc_bin).diagonal()
       return T if self._sc_directed else T / 2
 
-   def triangle_edge_prevalence(self):
+   def triangle_edge_prevalence(self) -> np.ndarray:
       """
       Returns the number of SC-FC triangles that involve each SC edge
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
          Matrix of edge prevalances in SC-FC triangles
       """
 
@@ -517,7 +523,7 @@ class Brain():
       sc_T = self.sc_bin.T
       return self.sc_bin * (A @ sc_T + sc_T @ A)
 
-   def hops_to_prev_used_nodes(self, nxt, prev_nodes):
+   def hops_to_prev_used_nodes(self, nxt: int, prev_nodes: List[int]) -> int:
       """
       Returns the lowest number of hops from any previously visited nodes to the potential next node
       (i.e. shortest path from previous nodes to the potential next node)
@@ -526,12 +532,12 @@ class Brain():
       ----------
       nxt : int
          Next node
-      prev_nodes : list
+      prev_nodes : List[int]
          Path sequence (containing previously visited nodes)
 
       Returns
       -------
-      out : int
+      int
          Fewest number of hops to a previously used node
       """
 
@@ -539,7 +545,7 @@ class Brain():
          return 0
       return self.shortest_paths(method='hops')[:,nxt][prev_nodes].min()
 
-   def dist_to_prev_used_nodes(self, nxt, prev_nodes):
+   def dist_to_prev_used_nodes(self, nxt: int, prev_nodes: List[int]) -> float:
       """
       Returns the Euclidean distance of the potential next node to the closest previously visited node
 
@@ -547,12 +553,12 @@ class Brain():
       ----------
       nxt : int
          Next node
-      prev_nodes : list
+      prev_nodes : List[int]
          Path sequence (containing previously visited nodes)
 
       Returns
       -------
-      out : float
+      float
          Euclidean distance to closest visited node
       """
 
@@ -560,20 +566,20 @@ class Brain():
          return 0
       return self.euc_dist[nxt][prev_nodes].min()
 
-   def shortest_paths(self, method='hops'):
+   def shortest_paths(self, method: str = 'hops') -> np.ndarray:
       """
       Returns the shortest path lengths between any two nodes
 
       Parameters
       ----------
-      method : str
-         Determines how the shortest paths are calculated
+      method : str, optional
+         Determines how the shortest paths are calculated, by default 'hops'
          - 'hops' : binary / fewest hops
          - 'dist' : sum of edge distances
 
       Returns
       -------
-      out : numpy.ndarray
+      np.ndarray
          Matrix of shortest path lengths
       """
 
