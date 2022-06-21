@@ -5,6 +5,20 @@
   - [Brain Objects](#brain-objects)
     - [Brain Constructor](#brain-constructor)
     - [Brain Criteria](#brain-criteria)
+      - [Streamlines](#streamlines)
+      - [Node Strength](#node-strength)
+      - [Hubs](#hubs)
+      - [Target Node](#target-node)
+      - [Neighbour of the Just Visited Node](#neighbour-of-the-just-visited-node)
+      - [Target Region](#target-region)
+      - [Edges Connecting Different Regions](#edges-connecting-different-regions)
+      - [Inter Regional Connections](#inter-regional-connections)
+      - [Previously Visited Region](#previously-visited-region)
+      - [Target Functional Region](#target-functional-region)
+      - [Edges Connecting Different Functional Regions](#edges-connecting-different-functional-regions)
+      - [Previously Visited Functional Regions](#previously-visited-functional-regions)
+      - [Inter Functional Region Connections](#inter-functional-region-connections)
+      - [Shortest Paths](#shortest-paths)
   - [PreferredPath Objects](#preferredpath-objects)
     - [Path Navigation Methods](#path-navigation-methods)
     - [PreferredPath Constructor](#preferredpath-constructor)
@@ -98,6 +112,8 @@ brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=1, fc
 
 More information on parameters and additional criteria can found in docstrings in the code
 
+#### Streamlines
+
 > Brain.streamlines(weighted: bool = True) -> np.ndarray
 
 Number of streamlines between any two nodes
@@ -109,6 +125,8 @@ print(result)
 # 5
 ```
 
+#### Node Strength
+
 > Brain.node_strength(weighted: bool = True, method: str = 'tot') -> np.ndarray
 
 Number of streamlines attached to each node
@@ -119,6 +137,8 @@ result = node_str[3] # node strength of node 3 for both in and out degree
 print(result)
 # 28
 ```
+
+#### Hubs
 
 > Brain.hubs(binary: bool = False) -> np.ndarray
 
@@ -134,6 +154,8 @@ print(result2)
 # [0 1 0 0 1 1 0 0]
 ```
 
+#### Target Node
+
 > Brain.is_target_node(nxt: int, target: int) -> int
 
 Whether or not the potential next node is the target node
@@ -143,6 +165,8 @@ result = brain.is_target_node(nxt=0, target=2) # Whether or not node 0 is the ta
 print(result)
 # 0
 ```
+
+#### Neighbour of the Just Visited Node
 
 > Brain.neighbour_just_visited_node(nxt: int, prev_nodes: List[int]) -> int
 
@@ -158,6 +182,8 @@ print(result2)
 # 0
 ```
 
+#### Target Region
+
 > Brain.is_target_region(nxt: int, target: int) -> int
 
 Returns whether or not a potential next node is in the target node's region
@@ -168,6 +194,8 @@ print(result)
 # 1
 ```
 
+#### Edges Connecting Different Regions
+
 > Brain.edge_con_diff_region(loc: int, nxt: int, target: int) -> int
 
 Returns whether or not a potential next node leaves the current region, if it is not already in the target region
@@ -177,6 +205,8 @@ result = brain.edge_con_diff_region(loc=0, nxt=2, target=3)    # Whether or not 
 print(result)
 # 1
 ```
+
+#### Inter Regional Connections
 
 > Brain.inter_regional_connections(weighted: bool = True, distinct: bool = False) -> np.ndarray
 
@@ -189,6 +219,8 @@ print(result)
 # 13
 ```
 
+#### Previously Visited Region
+
 > Brain.prev_visited_region(loc: int, nxt: int, prev_nodes: List[int]) -> int
 
 Returns whether or not the region of a potential next node has already been visited, unless it remains in the same region
@@ -198,6 +230,8 @@ result = brain.prev_visited_region(loc=3, nxt=4, prev_nodes=[2,6]) # Whether or 
 print(result)
 # 0
 ```
+
+#### Target Functional Region
 
 > Brain.is_target_func_region(nxt: int, target: int) -> int
 
@@ -209,6 +243,8 @@ print(result)
 # 1
 ```
 
+#### Edges Connecting Different Functional Regions
+
 > Brain.edge_con_diff_func_region(loc: int, nxt: int, target: int) -> int
 
 Returns whether or not a potential next node leaves the current functional region, if it is not already in the target functional region
@@ -218,6 +254,8 @@ result = brain.edge_con_diff_func_region(loc=0, nxt=3, target=5) # Whether or no
 print(result)
 # 1
 ```
+
+#### Previously Visited Functional Regions
 
 > Brain.prev_visited_func_region(loc: int, nxt: int, prev_nodes: List[int]) -> int
 
@@ -229,6 +267,8 @@ print(result)
 # 0
 ```
 
+#### Inter Functional Region Connections
+
 > Brain.inter_func_regional_connections(weighted: bool = True, distinct: bool = False) -> np.ndarray
 
 Returns how many connections each node has to different functional regions
@@ -239,6 +279,8 @@ result = ifrc[5] # Number of connections to different functional regions
 print(result)
 # 19
 ```
+
+#### Shortest Paths
 
 > Brain.shortest_paths(method: str = 'hops') -> np.ndarray
 
