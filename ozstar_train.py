@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     # Write params to a txt file and print
     summary = '====================\n' + '\n'.join([f'{k} = {v}' for k, v in params.items()]) + '\n===================='
-    print(summary)
+    print(summary, flush=True)
     if save_path is not None:
         # Add 'params' prefix and write
         ridx = save_path.rfind('/')
