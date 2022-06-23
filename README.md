@@ -1,6 +1,8 @@
 
 # Preferred paths <!-- omit in toc -->
 
+Used to compute and evaluate navigation paths in the human brain from a weighted set of navigation criteria.
+
 - [Setup](#setup)
   - [Requirements](#requirements)
   - [Downloading](#downloading)
