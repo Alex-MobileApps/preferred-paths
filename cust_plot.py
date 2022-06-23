@@ -210,7 +210,7 @@ def plot_multi_summary(paths: List[List[str]], scaled: bool = True, alpha: float
         plt.savefig(save_path, dpi=300)
 
 
-def plot_rewards(ax: matplotlib.axes.Axes, plt_data, plt_avg=None, plt_off=0, plt_subtitle='', loc='lower right', **kwargs) -> None:
+def plot_rewards(ax: matplotlib.axes.Axes, plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower right', **kwargs) -> None:
     """
     Plot the evolution of the rewards (navigation efficiency) in training
 
