@@ -523,6 +523,8 @@ fig, ax = plt.subplots()
 plot_rewards(ax=ax, plt_data=plt_data, plt_avg=100)
 ```
 
+<img src="img/reward.png">
+
 #### Success Ratio Evolution
 
 > plot_success(ax: matplotlib.axes.Axes, plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower right', **kwargs) -> None
@@ -533,6 +535,8 @@ from cust_plot import plot_success
 fig, ax = plt.subplots()
 plot_success(ax=ax, plt_data=plt_data, plt_avg=100)
 ```
+
+<img src="img/success.png">
 
 #### Mu Evolution
 
@@ -545,6 +549,8 @@ fig, ax = plt.subplots()
 plot_mu(ax=ax, plt_data=plt_data)
 ```
 
+<img src="img/mu.png">
+
 #### Sigma Evolution
 
 > plot_sig(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'upper right', scaled: bool = True, **kwargs) -> None
@@ -555,6 +561,8 @@ from cust_plot import plot_sig
 fig, ax = plt.subplots()
 plot_sig(ax=ax, plt_data=plt_data)
 ```
+
+<img src="img/sig.png">
 
 #### Final Mu and Sigma
 
@@ -567,6 +575,8 @@ fig, ax = plt.subplots()
 plot_pdf(ax=ax, plt_data=plt_data)
 ```
 
+<img src="img/pdf.png">
+
 #### Full Results for Multiple Experiments
 
 > plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int = None, plt_off: int = 0, loc: str = None, scaled: bool = True, zero_line: bool = False, figsize: Tuple[int,int] = None, save_path: str = None) -> None
@@ -577,6 +587,8 @@ from cust_plot import plot_multi_experiments
 # After creating results for demo2.pt and demo3.pt
 plot_multi_experiments(paths=['demo.pt','demo2.pt','demo3.pt'], plt_avg=100, plt_title='Final Results')
 ```
+
+<img src="img/multi_experiment.png">
 
 #### Summary for Multiple Experiments
 
@@ -590,6 +602,8 @@ fig, ax = plt.subplots()
 plot_summary(ax=ax, paths=['demo.pt','demo2.pt','demo3.pt'])
 ```
 
+<img src="img/summary.png">
+
 #### Summary for Multiple Experiments on Multiple Brains
 
 > plot_multi_summary(paths: List[List[str]], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False, plt_title: str = None, plt_subtitle: List[str] = None, figsize: Tuple[int,int] = None, save_path: str = None)
@@ -600,6 +614,8 @@ from cust_plot import plot_multi_summary
 # After creating results for demo2.pt, demo3.pt and demo4.pt
 plot_multi_summary(paths=[['demo.pt','demo2.pt'],['demo3.pt','demo4.pt']], plt_subtitle=[' (brain 1)',' (brain 2)'])
 ```
+
+<img src="img/multi_summary.png">
 
 ### Full Example
 
