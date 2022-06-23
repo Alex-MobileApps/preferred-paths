@@ -1,5 +1,5 @@
 import numpy as np
-from brain import Brain, GlobalBrain
+from brain import Brain
 from preferred_path import PreferredPath
 import torch
 from torch import tensor as T
@@ -51,7 +51,7 @@ class BrainDataset():
 
         # Fill vars
         for i in range(n):
-            brain = GlobalBrain(sc[i], fc[i], euc_dist, hubs=hubs, regions=regions, func_regions=func_regions)
+            brain = Brain(sc[i], fc[i], euc_dist, hubs=hubs, regions=regions, func_regions=func_regions)
             fn_vector = [None] * num_fns
             for j, name in enumerate(fns):
                 fn_vector[j] = BrainDataset.fn_mapper(name, brain)

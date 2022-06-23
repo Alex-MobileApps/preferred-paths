@@ -2,7 +2,7 @@
 # run: python3 -m unittest test.test_global_brain.py
 
 from test.test import Test
-from brain import GlobalBrain
+from brain import Brain
 import numpy as np
 from numpy import inf
 
@@ -11,7 +11,7 @@ class TestGlobalBrain(Test):
     def test_closest_to_target(self):
         M = np.array([[0,1,0,1],[1,0,1,0],[0,1,0,1],[1,0,1,0]])
         euc = np.array([[0,3,2.8,2.2],[3,0,2.2,2.8],[2.8,2.2,0,1],[2.2,2.8,1,0]])
-        brain = GlobalBrain(sc=M, fc=M, euc_dist=euc)
+        brain = Brain(sc=M, fc=M, euc_dist=euc)
         exp = np.array([
             # target 0
             [[ inf,  -3, inf,-2.2],

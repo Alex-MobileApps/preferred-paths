@@ -432,7 +432,30 @@ class Brain():
 
       return self._int_reg_con(self._func_regions, weighted, distinct)
 
-   # Measures not in use
+   # Misc
+
+   def closest_to_target(self, loc: int, nxt: int, target: int) -> int:
+      """
+      Returns how much closer a target node becomes when moving to a node adjacent to the current location
+
+      Parameters
+      ----------
+      loc : int
+         Current node
+      nxt : int
+         Next node
+      target : int
+         Target node
+
+      Returns
+      -------
+      int
+         How much closer a target node becomes after taking an edge to the next node
+      """
+
+      if not self.sc_bin[loc,nxt]:
+         return np.inf
+      return self.euc_dist[loc, target] - self.euc_dist[nxt, target]
 
    def edge_length(self) -> np.ndarray:
       """
