@@ -396,7 +396,7 @@ BrainDataset objects hold the Brain objects as well as methods that are used in 
 
 > BrainDataset(sc: np.ndarray, fc: np.ndarray, euc_dist: np.ndarray, hubs: np.ndarray, regions: np.ndarray, func_regions: np.ndarray, fns: List[str], fn_weights: List[int] = None)
 
-- **sc**, **fc**: 3D matrices ($m \times n \times n$), containing the sc and fc matrices for all brains being trained
+- **sc**, **fc**: 3D matrices ($m \times n \times n$), containing the sc and fc matrices for all brains being trained ($m$ = Number of brains, $n$ = brain resolution)
 - **fns**: List of brain criteria functions to use. Available functions include:
   - streamlines
   - node_str
