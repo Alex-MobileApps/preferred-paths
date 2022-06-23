@@ -2,7 +2,7 @@
 - [Preferred paths](#preferred-paths)
   - [Setup](#setup)
     - [Requirements](#requirements)
-    - [Installing](#installing)
+    - [Downloading](#downloading)
   - [Brain Objects](#brain-objects)
     - [Brain Constructor](#brain-constructor)
     - [Brain Criteria](#brain-criteria)
@@ -19,6 +19,7 @@
       - [Edges Connecting Different Functional Regions](#edges-connecting-different-functional-regions)
       - [Previously Visited Functional Regions](#previously-visited-functional-regions)
       - [Inter Functional Region Connections](#inter-functional-region-connections)
+      - [Closest to Target](#closest-to-target)
       - [Shortest Paths](#shortest-paths)
   - [PreferredPath Objects](#preferredpath-objects)
     - [Path Navigation Methods](#path-navigation-methods)
@@ -57,11 +58,11 @@
 - PyTorch
 - Matplotlib
 
-### Installing
+### Downloading
 
 - Install all requirements listed above
 - Clone the contents of https://github.com/alex-mobileapps/preferred-paths
-- Create a new python script (e.g. demo.py) in the 'preferred-paths' directory
+- Create a new python script (e.g. demo.py) in the 'preferred-paths' directory to work from
 
 ```
 git clone https://github.com/alex-mobileapps/preferred-paths
@@ -295,6 +296,18 @@ print(result)
 # 19
 ```
 
+#### Closest to Target
+
+> Brain.closest_to_target(self, loc: int, nxt: int, target: int) -> int
+
+Returns the change in Euclidean distance to the target node when moving to the next node
+```
+result = brain.closest_to_target(loc=0, nxt=1, target=2) # How much closer node 2 becomes after moving to node 1
+
+print(result)
+# 3
+```
+
 #### Shortest Paths
 
 > Brain.shortest_paths(method: str = 'hops') -> np.ndarray
@@ -418,6 +431,8 @@ BrainDataset objects hold the Brain objects as well as methods that are used in 
   - edge_con_diff_func_region
   - prev_visited_func_region
   - inter_func_regional_connections
+  - rand_walk (i.e. selecting any neighbour with equal probability)
+  - closest_to_target
   - anti criteria versions of any of the above (e.g. anti_streamlines, anti_node_str)
 - All other parameters are the same as for PreferredPath objects
 
@@ -625,7 +640,7 @@ See [demo_ml.ipynb](https://github.com/Alex-MobileApps/preferred-paths/blob/main
 
 ### OzStar Setup
 
-1. Copy the 'preferred-paths' directory to your OzStar home directory from the command line
+Copy the 'preferred-paths' directory to your OzStar home directory from the command line
 
 ```
 scp -r path/to/preferred-paths your-username@ozstar.swin.edu.au:
