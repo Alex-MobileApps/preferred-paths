@@ -37,6 +37,9 @@
       - [Mu Evolution](#mu-evolution)
       - [Sigma Evolution](#sigma-evolution)
       - [Final Mu and Sigma](#final-mu-and-sigma)
+      - [Full Results for Multiple Experiments](#full-results-for-multiple-experiments)
+      - [Summary for Multiple Experiments](#summary-for-multiple-experiments)
+      - [Summary for Multiple Experiments on Multiple Brains](#summary-for-multiple-experiments-on-multiple-brains)
     - [Full Example](#full-example)
   - [OzStar Training](#ozstar-training)
     - [OzStar Setup](#ozstar-setup)
@@ -396,7 +399,7 @@ print(result2)
 
 ### BrainDataset Objects
 
-BrainDataset objects holds the brains to use in training.
+BrainDataset objects hold the Brain objects as well as methods that are used in training.
 
 > BrainDataset(sc: np.ndarray, fc: np.ndarray, euc_dist: np.ndarray, hubs: np.ndarray, regions: np.ndarray, func_regions: np.ndarray, fns: List[str], fn_weights: List[int] = None)
 
@@ -562,6 +565,40 @@ from cust_plot import plot_pdf
 
 fig, ax = plt.subplots()
 plot_pdf(ax=ax, plt_data=plt_data)
+```
+
+#### Full Results for Multiple Experiments
+
+> plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int = None, plt_off: int = 0, loc: str = None, scaled: bool = True, zero_line: bool = False, figsize: Tuple[int,int] = None, save_path: str = None) -> None
+
+```
+from cust_plot import plot_multi_experiments
+
+# After creating results for demo2.pt and demo3.pt
+plot_multi_experiments(paths=['demo.pt','demo2.pt','demo3.pt'], plt_avg=100, plt_title='Final Results')
+```
+
+#### Summary for Multiple Experiments
+
+> plot_summary(ax: matplotlib.axes.Axes, paths: List[str], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False, plt_subtitle: str = '') -> None
+
+```
+from cust_plot import plot_summary
+
+# After creating results for demo2.pt and demo3.pt
+fig, ax = plt.subplots()
+plot_summary(ax=ax, paths=['demo.pt','demo2.pt','demo3.pt'])
+```
+
+#### Summary for Multiple Experiments on Multiple Brains
+
+> plot_multi_summary(paths: List[List[str]], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False, plt_title: str = None, plt_subtitle: List[str] = None, figsize: Tuple[int,int] = None, save_path: str = None)
+
+```
+from cust_plot import plot_multi_summary
+
+# After creating results for demo2.pt, demo3.pt and demo4.pt
+plot_multi_summary(paths=[['demo.pt','demo2.pt'],['demo3.pt','demo4.pt']], plt_subtitle=[' (brain 1)',' (brain 2)'])
 ```
 
 ### Full Example
