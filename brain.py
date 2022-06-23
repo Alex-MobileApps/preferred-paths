@@ -436,7 +436,7 @@ class Brain():
 
    def closest_to_target(self, loc: int, nxt: int, target: int) -> int:
       """
-      Returns how much closer a target node becomes when moving to a node adjacent to the current location
+      Returns the change in Euclidean distance to the target node when moving to the next node
 
       Parameters
       ----------
