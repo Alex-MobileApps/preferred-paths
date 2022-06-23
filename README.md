@@ -1,52 +1,30 @@
-# Preferred paths
-- [Preferred paths](#preferred-paths)
-  - [Setup](#setup)
-    - [Requirements](#requirements)
-    - [Downloading](#downloading)
-  - [Brain Objects](#brain-objects)
-    - [Brain Constructor](#brain-constructor)
-    - [Brain Criteria](#brain-criteria)
-      - [Streamlines](#streamlines)
-      - [Node Strength](#node-strength)
-      - [Hubs](#hubs)
-      - [Target Node](#target-node)
-      - [Neighbour of the Just Visited Node](#neighbour-of-the-just-visited-node)
-      - [Target Region](#target-region)
-      - [Edges Connecting Different Regions](#edges-connecting-different-regions)
-      - [Inter Regional Connections](#inter-regional-connections)
-      - [Previously Visited Region](#previously-visited-region)
-      - [Target Functional Region](#target-functional-region)
-      - [Edges Connecting Different Functional Regions](#edges-connecting-different-functional-regions)
-      - [Previously Visited Functional Regions](#previously-visited-functional-regions)
-      - [Inter Functional Region Connections](#inter-functional-region-connections)
-      - [Closest to Target](#closest-to-target)
-      - [Shortest Paths](#shortest-paths)
-  - [PreferredPath Objects](#preferredpath-objects)
-    - [Path Navigation Methods](#path-navigation-methods)
-    - [PreferredPath Constructor](#preferredpath-constructor)
-    - [Finding a single path](#finding-a-single-path)
-    - [Finding all paths](#finding-all-paths)
-  - [Machine Learning](#machine-learning)
-    - [BrainDataset Objects](#braindataset-objects)
-    - [PolicyEstimator Objects](#policyestimator-objects)
-    - [Running REINFORCE](#running-reinforce)
-    - [Saving Results](#saving-results)
-    - [Loading Results](#loading-results)
-    - [Visualising Results](#visualising-results)
-      - [Rewards Evolution](#rewards-evolution)
-      - [Success Ratio Evolution](#success-ratio-evolution)
-      - [Mu Evolution](#mu-evolution)
-      - [Sigma Evolution](#sigma-evolution)
-      - [Final Mu and Sigma](#final-mu-and-sigma)
-      - [Full Results for Multiple Experiments](#full-results-for-multiple-experiments)
-      - [Summary for Multiple Experiments](#summary-for-multiple-experiments)
-      - [Summary for Multiple Experiments on Multiple Brains](#summary-for-multiple-experiments-on-multiple-brains)
-    - [Full Example](#full-example)
-  - [OzStar Training](#ozstar-training)
-    - [OzStar Setup](#ozstar-setup)
-    - [OzStar Scripts](#ozstar-scripts)
-    - [OzStar Running](#ozstar-running)
-    - [Ozstar Downloading Results](#ozstar-downloading-results)
+
+# Preferred paths <!-- omit in toc -->
+
+- [Setup](#setup)
+  - [Requirements](#requirements)
+  - [Downloading](#downloading)
+- [Brain Objects](#brain-objects)
+  - [Brain Constructor](#brain-constructor)
+  - [Brain Criteria](#brain-criteria)
+- [PreferredPath Objects](#preferredpath-objects)
+  - [Path Navigation Methods](#path-navigation-methods)
+  - [PreferredPath Constructor](#preferredpath-constructor)
+  - [Finding a single path](#finding-a-single-path)
+  - [Finding all paths](#finding-all-paths)
+- [Machine Learning](#machine-learning)
+  - [BrainDataset Objects](#braindataset-objects)
+  - [PolicyEstimator Objects](#policyestimator-objects)
+  - [Running REINFORCE](#running-reinforce)
+  - [Saving Results](#saving-results)
+  - [Loading Results](#loading-results)
+  - [Visualising Results](#visualising-results)
+  - [Full Example](#full-example)
+- [OzStar Training](#ozstar-training)
+  - [OzStar Setup](#ozstar-setup)
+  - [OzStar Scripts](#ozstar-scripts)
+  - [OzStar Running](#ozstar-running)
+  - [Ozstar Downloading Results](#ozstar-downloading-results)
 
 ## Setup
 
@@ -128,7 +106,7 @@ brain = Brain(sc=sc, fc=fc, euc_dist=euc_dist, sc_directed=True, sc_thresh=1, fc
 
 More information on parameters and additional criteria can found in docstrings in the code
 
-#### Streamlines
+#### Streamlines <!-- omit in toc -->
 
 > Brain.streamlines(weighted: bool = True) -> np.ndarray
 
@@ -141,7 +119,7 @@ print(result)
 # 5
 ```
 
-#### Node Strength
+#### Node Strength <!-- omit in toc -->
 
 > Brain.node_strength(weighted: bool = True, method: str = 'tot') -> np.ndarray
 
@@ -154,7 +132,7 @@ print(result)
 # 28
 ```
 
-#### Hubs
+#### Hubs <!-- omit in toc -->
 
 > Brain.hubs(binary: bool = False) -> np.ndarray
 
@@ -170,7 +148,7 @@ print(result2)
 # [0 1 0 0 1 1 0 0]
 ```
 
-#### Target Node
+#### Target Node <!-- omit in toc -->
 
 > Brain.is_target_node(nxt: int, target: int) -> int
 
@@ -182,7 +160,7 @@ print(result)
 # 0
 ```
 
-#### Neighbour of the Just Visited Node
+#### Neighbour of the Just Visited Node <!-- omit in toc -->
 
 > Brain.neighbour_just_visited_node(nxt: int, prev_nodes: List[int]) -> int
 
@@ -198,7 +176,7 @@ print(result2)
 # 0
 ```
 
-#### Target Region
+#### Target Region <!-- omit in toc -->
 
 > Brain.is_target_region(nxt: int, target: int) -> int
 
@@ -210,7 +188,7 @@ print(result)
 # 1
 ```
 
-#### Edges Connecting Different Regions
+#### Edges Connecting Different Regions <!-- omit in toc -->
 
 > Brain.edge_con_diff_region(loc: int, nxt: int, target: int) -> int
 
@@ -222,7 +200,7 @@ print(result)
 # 1
 ```
 
-#### Inter Regional Connections
+#### Inter Regional Connections <!-- omit in toc -->
 
 > Brain.inter_regional_connections(weighted: bool = True, distinct: bool = False) -> np.ndarray
 
@@ -235,7 +213,7 @@ print(result)
 # 13
 ```
 
-#### Previously Visited Region
+#### Previously Visited Region <!-- omit in toc -->
 
 > Brain.prev_visited_region(loc: int, nxt: int, prev_nodes: List[int]) -> int
 
@@ -247,7 +225,7 @@ print(result)
 # 0
 ```
 
-#### Target Functional Region
+#### Target Functional Region <!-- omit in toc -->
 
 > Brain.is_target_func_region(nxt: int, target: int) -> int
 
@@ -259,7 +237,7 @@ print(result)
 # 1
 ```
 
-#### Edges Connecting Different Functional Regions
+#### Edges Connecting Different Functional Regions <!-- omit in toc -->
 
 > Brain.edge_con_diff_func_region(loc: int, nxt: int, target: int) -> int
 
@@ -271,7 +249,7 @@ print(result)
 # 1
 ```
 
-#### Previously Visited Functional Regions
+#### Previously Visited Functional Regions <!-- omit in toc -->
 
 > Brain.prev_visited_func_region(loc: int, nxt: int, prev_nodes: List[int]) -> int
 
@@ -283,7 +261,7 @@ print(result)
 # 0
 ```
 
-#### Inter Functional Region Connections
+#### Inter Functional Region Connections <!-- omit in toc -->
 
 > Brain.inter_func_regional_connections(weighted: bool = True, distinct: bool = False) -> np.ndarray
 
@@ -296,7 +274,7 @@ print(result)
 # 19
 ```
 
-#### Closest to Target
+#### Closest to Target <!-- omit in toc -->
 
 > Brain.closest_to_target(self, loc: int, nxt: int, target: int) -> int
 
@@ -308,7 +286,7 @@ print(result)
 # 3
 ```
 
-#### Shortest Paths
+#### Shortest Paths <!-- omit in toc -->
 
 > Brain.shortest_paths(method: str = 'hops') -> np.ndarray
 
@@ -526,7 +504,7 @@ opt.load_state_dict(plt_data.pop('optimizer_state_dict'))
 
 ### Visualising Results
 
-#### Rewards Evolution
+#### Rewards Evolution <!-- omit in toc -->
 
 > plot_rewards(ax: matplotlib.axes.Axes, plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower right', **kwargs) -> None
 
@@ -540,7 +518,7 @@ plot_rewards(ax=ax, plt_data=plt_data, plt_avg=100)
 
 <img src="img/reward.png">
 
-#### Success Ratio Evolution
+#### Success Ratio Evolution <!-- omit in toc -->
 
 > plot_success(ax: matplotlib.axes.Axes, plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower right', **kwargs) -> None
 
@@ -553,7 +531,7 @@ plot_success(ax=ax, plt_data=plt_data, plt_avg=100)
 
 <img src="img/success.png">
 
-#### Mu Evolution
+#### Mu Evolution <!-- omit in toc -->
 
 > plot_mu(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower left', scaled: bool = True, zero_line: bool = False, **kwargs) -> None
 
@@ -566,7 +544,7 @@ plot_mu(ax=ax, plt_data=plt_data)
 
 <img src="img/mu.png">
 
-#### Sigma Evolution
+#### Sigma Evolution <!-- omit in toc -->
 
 > plot_sig(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'upper right', scaled: bool = True, **kwargs) -> None
 
@@ -579,7 +557,7 @@ plot_sig(ax=ax, plt_data=plt_data)
 
 <img src="img/sig.png">
 
-#### Final Mu and Sigma
+#### Final Mu and Sigma <!-- omit in toc -->
 
 > plot_pdf(ax: matplotlib.axes.Axes, plt_data: dict, plt_subtitle: str = '', loc: str = 'center right', scaled: bool = True, zero_line: bool = False, **kwargs) -> None
 
@@ -592,7 +570,7 @@ plot_pdf(ax=ax, plt_data=plt_data)
 
 <img src="img/pdf.png">
 
-#### Full Results for Multiple Experiments
+#### Full Results for Multiple Experiments <!-- omit in toc -->
 
 > plot_multi_experiments(paths: List[str], plt_title: str = None, plt_avg: int = None, plt_off: int = 0, loc: str = None, scaled: bool = True, zero_line: bool = False, figsize: Tuple[int,int] = None, save_path: str = None) -> None
 
@@ -605,7 +583,7 @@ plot_multi_experiments(paths=['demo.pt','demo2.pt','demo3.pt'], plt_avg=100, plt
 
 <img src="img/multi_experiment.png">
 
-#### Summary for Multiple Experiments
+#### Summary for Multiple Experiments <!-- omit in toc -->
 
 > plot_summary(ax: matplotlib.axes.Axes, paths: List[str], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False, plt_subtitle: str = '') -> None
 
@@ -619,7 +597,7 @@ plot_summary(ax=ax, paths=['demo.pt','demo2.pt','demo3.pt'])
 
 <img src="img/summary.png">
 
-#### Summary for Multiple Experiments on Multiple Brains
+#### Summary for Multiple Experiments on Multiple Brains <!-- omit in toc -->
 
 > plot_multi_summary(paths: List[List[str]], scaled: bool = True, alpha: float = 0.7, zero_line: bool = False, plt_title: str = None, plt_subtitle: List[str] = None, figsize: Tuple[int,int] = None, save_path: str = None)
 
