@@ -1,7 +1,8 @@
 # Preferred paths
 - [Preferred paths](#preferred-paths)
-  - [Requirements](#requirements)
-    - [Setup](#setup)
+  - [Setup](#setup)
+    - [Requirements](#requirements)
+    - [Installing](#installing)
   - [Brain Objects](#brain-objects)
     - [Brain Constructor](#brain-constructor)
     - [Brain Criteria](#brain-criteria)
@@ -28,13 +29,24 @@
     - [BrainDataset Objects](#braindataset-objects)
     - [PolicyEstimator Objects](#policyestimator-objects)
     - [Running REINFORCE](#running-reinforce)
+    - [Saving Results](#saving-results)
+    - [Loading Results](#loading-results)
     - [Visualising Results](#visualising-results)
+      - [Rewards Evolution](#rewards-evolution)
+      - [Success Ratio Evolution](#success-ratio-evolution)
+      - [Mu Evolution](#mu-evolution)
+      - [Sigma Evolution](#sigma-evolution)
+      - [Final Mu and Sigma](#final-mu-and-sigma)
+    - [Full Example](#full-example)
+  - [OzStar Training](#ozstar-training)
     - [OzStar Setup](#ozstar-setup)
     - [OzStar Scripts](#ozstar-scripts)
     - [OzStar Running](#ozstar-running)
     - [Ozstar Downloading Results](#ozstar-downloading-results)
 
-## Requirements
+## Setup
+
+### Requirements
 
 - Python 3
 - NumPy
@@ -42,11 +54,11 @@
 - PyTorch
 - Matplotlib
 
-### Setup
+### Installing
 
 - Install all requirements listed above
 - Clone the contents of https://github.com/alex-mobileapps/preferred-paths
-- Create a new python script (e.g. demo.py) in the `preferred-paths` directory
+- Create a new python script (e.g. demo.py) in the 'preferred-paths' directory
 
 ```
 git clone https://github.com/alex-mobileapps/preferred-paths
@@ -382,17 +394,181 @@ print(result2)
 
 ## Machine Learning
 
-Given a set of brain criteria functions, a high quality set of weights for the criteria can be obtained using a REINFORCE policy gradient to minimise the path lengths
-
 ### BrainDataset Objects
+
+BrainDataset objects holds the brains to use in training.
 
 > BrainDataset(sc: np.ndarray, fc: np.ndarray, euc_dist: np.ndarray, hubs: np.ndarray, regions: np.ndarray, func_regions: np.ndarray, fns: List[str], fn_weights: List[int] = None)
 
+- **sc**, **fc**: 3D matrices ($m \times n \times n$), containing the sc and fc matrices for all brains being trained
+- **fns**: List of brain criteria functions to use. Available functions include:
+  - streamlines
+  - node_str
+  - hub
+  - target_node
+  - neighbour_just_visited_node
+  - target_region
+  - edge_con_diff_region
+  - inter_regional_connections
+  - prev_visited_region
+  - target_func_region
+  - edge_con_diff_func_region
+  - prev_visited_func_region
+  - inter_func_regional_connections
+  - anti criteria versions of any of the above (e.g. anti_streamlines, anti_node_str)
+- All other parameters are the same as for PreferredPath objects
+
+```
+from ml import BrainDataset
+
+sc_3d = sc.reshape((1,*sc.shape))
+fc_3d = fc.reshape((1,*sc.shape))
+fns = ['streamlines','node_str','target_node']
+
+dataset = BrainDataset(sc=sc_3d, fc=fc_3d, euc_dist=euc_dist, hubs=hubs, regions=regions, func_regions=func_regions, fns=fns)
+```
+
 ### PolicyEstimator Objects
+
+PolicyEstimator objects contain the neural network
+
+> PolicyEstimator(res: int, fn_len: int, hidden_units: int = 10, init_weight: float = None, const_sig: float = None)
+
+```
+from ml import PolicyEstimator
+
+pe = PolicyEstimator(res=len(sc), fn_len=len(fns), hidden_units=10)
+```
 
 ### Running REINFORCE
 
+Learn a policy that optimses the weighting for each of the brain criteria functions.
+
+> reinforce(pe: 'PolicyEstimator', opt: torch.optim, data: 'BrainDataset', epochs: int, batch: int, lr: float, sample: int = 0, const_sig: float = None, pos_only: bool = False, plt_data: dict = None, save_path: str = None, save_freq: int = 1, log: bool = False, path_method: str = 'fwd') -> None
+
+```
+import torch
+from ml import reinforce
+
+# Holds training evolution results
+plt_data = {
+  'epochs': 0,
+  'epoch_seconds': [],
+  'rewards': [],
+  'success': [],
+  'mu': [[] for _ in range(len(fns))],
+  'sig': [[] for _ in range(len(fns))],
+  'fns': fns}
+
+# Gradient descent optimizer
+opt = torch.optim.Adam(pe.network.parameters())
+
+# Improve weights over 1000 epochs
+reinforce(pe, opt, dataset, epochs=1000, batch=1, sample=100, lr=0.001, plt_data=plt_data)
+```
+
+### Saving Results
+
+Results can be saved as a '.pt' file during training if 'save_freq' and 'save_path' are set when running REINFORCE.
+- **save_freq**: Number of epochs to complete before each save
+- **save_path**: Where to save the results
+
+```
+reinforce(pe, opt, dataset, epochs=1000, batch=1, sample=100, lr=0.001, plt_data=plt_data, save_path='demo.pt', save_freq=100)
+```
+
+### Loading Results
+
+Results can be loaded from a '.pt' file after training
+
+```
+import torch
+from utils import device # detects whether you are using CPU or GPU
+
+plt_data = torch.load('demo.pt', map_location=device)
+```
+
+The loaded data is in a dictionary with keys:
+- **model_state_dict**: Neural network state (so that training can be resumed)
+- **optimizer_state_dict**: Optimizer state (so that training can be resumed)
+- **epochs**: Number of epochs completed
+- **epoch_seconds**: Number of seconds taken to complete each epoch
+- **rewards**: Observed navigation efficiency after each batch
+- **success**: Observed success ratio after each batch
+- **mu**: Brain criteria function weights after each batch
+- **sig**: Standard deviation of the exploration space for each brain criteria function after each batch
+- **fns**: List of brain criteria functions used in training (in the same order as they appear in mu and sigma)
+- Any other parameters that you manually added to plt_data during training
+
+To resume training, the state of the policy estimator and optimizer must be set
+```
+pe.network.load_state_dict(plt_data.pop('model_state_dict'))
+opt.load_state_dict(plt_data.pop('optimizer_state_dict'))
+```
+
 ### Visualising Results
+
+#### Rewards Evolution
+
+> plot_rewards(ax: matplotlib.axes.Axes, plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower right', **kwargs) -> None
+
+```
+import matplotlib.pyplot as plt
+from cust_plot import plot_rewards
+
+fig, ax = plt.subplots()
+plot_rewards(ax=ax, plt_data=plt_data, plt_avg=100)
+```
+
+#### Success Ratio Evolution
+
+> plot_success(ax: matplotlib.axes.Axes, plt_data: dict, plt_avg: int = None, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower right', **kwargs) -> None
+
+```
+from cust_plot import plot_success
+
+fig, ax = plt.subplots()
+plot_success(ax=ax, plt_data=plt_data, plt_avg=100)
+```
+
+#### Mu Evolution
+
+> plot_mu(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'lower left', scaled: bool = True, zero_line: bool = False, **kwargs) -> None
+
+```
+from cust_plot import plot_mu
+
+fig, ax = plt.subplots()
+plot_mu(ax=ax, plt_data=plt_data)
+```
+
+#### Sigma Evolution
+
+> plot_sig(ax: matplotlib.axes.Axes, plt_data: dict, plt_off: int = 0, plt_subtitle: str = '', loc: str = 'upper right', scaled: bool = True, **kwargs) -> None
+
+```
+from cust_plot import plot_sig
+
+fig, ax = plt.subplots()
+plot_sig(ax=ax, plt_data=plt_data)
+```
+
+#### Final Mu and Sigma
+
+> plot_pdf(ax: matplotlib.axes.Axes, plt_data: dict, plt_subtitle: str = '', loc: str = 'center right', scaled: bool = True, zero_line: bool = False, **kwargs) -> None
+
+```
+from cust_plot import plot_pdf
+
+fig, ax = plt.subplots()
+plot_pdf(ax=ax, plt_data=plt_data)
+```
+
+### Full Example
+
+See [demo_ml.ipynb](https://github.com/Alex-MobileApps/preferred-paths/blob/main/demo_ml.ipynb)
+
+## OzStar Training
 
 ### OzStar Setup
 
@@ -412,7 +588,7 @@ ozstar_train.py takes the following parameters
 - **subj**: Brain number to train (e.g. 4 will train s004, use 0 to train all brains) - int, by default 1
 - **epoch**: Number of epochs to run - int, by default 1
 - **batch**: Number of brains per batch (set to one if training on 1 brain only) - int, by default 1
-- **sample**: Number of FC edge samples to consider per look at a brain - int, by default 100
+- **sample**: Number of FC edge samples to consider per look at a brain (set to 0 to use all FC edges instead of sampling) - int, by default 100
 - **hu**: Number of hidden units in the single hidden layer of the neural network - int, by default 10
 - **lr**: Learning rate - float, by default 0.001
 - **save**: Path to save the results to on OzStar (e.g. demo.pt will save to your-username/preferred-path/demo.pt on OzStar) - str, by default None
@@ -436,17 +612,16 @@ For example:
 #SBATCH --time=48:00:00
 #SBATCH --mem-per-cpu=6000
 #SBATCH --partition=skylake
-#SBATCH --gres=gpu:1
 
 module load python/3.8.5
 module load pytorch/1.7.1-python-3.8.5
 module load scipy/1.6.0-python-3.8.5
 module load scikit-learn/0.24.2-python-3.8.5
 
-python3 ./ozstar_train.py --res 219 --subj 1 --epoch 1000 --sample 100 --hu 10 --lr 0.001 --pathmethod fwd --posonly --nolog --savefreq 100 --save demo.pt --fns anti_streamlines target_node
+python3 ~/preferred-paths/ozstar_train.py --res 219 --subj 1 --epoch 1000 --sample 100 --hu 10 --lr 0.001 --pathmethod fwd --nolog --savefreq 100 --save ~/preferred-paths/demo.pt --fns anti_streamlines target_node
 ```
 Will create a job named demo_job that will run on the 219 resolution version of brain s001 with criteria functions anti_streamlines and target_node.
-This will terminate after 48 hours or 1000 epochs (whichever comes first) and use 100 FC edge samples per step, 10 hidden units, learning rate of 0.001, fwd path navigation method, produce only positive criteria weights, does not log ouput during each epoch, and saves to preferred-paths/demo.pt on your OzStar directory every 100 epochs. All other parameters in ozstar_train will have their default values.
+This will terminate after 48 hours or 1000 epochs (whichever comes first) and use 100 FC edge samples per step, 10 hidden units, learning rate of 0.001, fwd path navigation method, does not log ouput during each epoch, and saves to preferred-paths/demo.pt on your OzStar directory every 100 epochs. All other parameters in ozstar_train will have their default values.
 
 You can change the job name from demo_job to easily identify it in OzStar during training as well as change the running time from 48 hours if you need more/less time.
 
@@ -469,11 +644,11 @@ cd preferred-paths
 ```
 sbatch demo.sh
 ```
-6. View progress of your job (will disappear if job has completed or was unsuccessful)
+6. View progress of your job (will disappear once job has completed or was unsuccessful)
 ```
 squeue -u your-username
 ```
-7. View job output if unsuccessful. E.g. if job ID was 27724619
+7. View job output if training is unsuccessful. E.g. if job ID was 27724619
 ```
 more slurm-27724619.out
 ```
