@@ -669,25 +669,21 @@ You can change the job name from demo_job to easily identify it in OzStar during
 1. Create a OzStar script as above and save it in a file (e.g. demo.sh)
 2. Copy the script to the preferred-paths folder in your OzStar directory from the command line
 ```
-scp path/to/demo.sh your-username@ozstar.swin.edu.au:preferred-paths
+scp path/to/demo.sh your-username@ozstar.swin.edu.au:
 ```
 3. Login to OzStar from the command line
 ```
 ssh your-username@ozstar.swin.edu.au
 ```
-4. Navigate to the preferred-paths directory
-```
-cd preferred-paths
-```
-5. Run the script (will give you a job ID e.g. 27724619)
+4. Run the script (will give you a job ID e.g. 27724619)
 ```
 sbatch demo.sh
 ```
-6. View progress of your job (will disappear once job has completed or was unsuccessful)
+5. View progress of your job (will disappear once job has completed or was unsuccessful)
 ```
 squeue -u your-username
 ```
-7. View job output if training is unsuccessful. E.g. if job ID was 27724619
+6. View job output if training is unsuccessful. E.g. if job ID was 27724619
 ```
 more slurm-27724619.out
 ```
@@ -702,6 +698,6 @@ E.g. if 'save' was set to 'demo.pt':
 Download the results locally
 ```
 cd path/to/save/results
-scp your-username@ozstar.swin.edu.au:preferred-paths/demo.pt .
-scp your-username@ozstar.swin.edu.au:preferred-paths/params_demo.pt.txt .
+scp your-username@ozstar.swin.edu.au:demo.pt .
+scp your-username@ozstar.swin.edu.au:params_demo.pt.txt .
 ```
