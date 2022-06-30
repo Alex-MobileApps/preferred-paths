@@ -639,7 +639,7 @@ ozstar_train.py takes the following parameters
 - **nnweight**: Set a fixed initial weight for all edges in the neural network - float, by default None
 - **constsig**: Set a fixed standard deviation sigma instead of learning it during training - float, by default None
 - **posonly**: Flags whether to prevent criteria from being weighted less than 0 (consider using anti-criteria in combination with this for known negatively weighted criteria)
-- **fns**: Sequence of criteria functions to use in training. Available functions include: streamlines, node_str, hub, target_node, neighbour_just_visited_node, target_region, edge_con_diff_region, inter_regional_connections, prev_visited_region, target_func_region, edge_con_diff_func_region, prev_visited_func_region, inter_func_regional_connections and their anti-criteria versions (e.g. anti_streamlines, anti_hub, etc.)
+- **fns**: Sequence of criteria functions to use in training. Available functions include: streamlines, node_str, hub, target_node, neighbour_just_visited_node, target_region, edge_con_diff_region, inter_regional_connections, prev_visited_region, target_func_region, edge_con_diff_func_region, prev_visited_func_region, inter_func_regional_connections, closest_to_target, rand_walk and their anti-criteria versions (e.g. anti_streamlines, anti_hub, etc.). Anti-criteria impose an equivalent penalty on using the criteria instead of a reward.
 
 For example:
 ```
