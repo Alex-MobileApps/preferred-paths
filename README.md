@@ -23,7 +23,6 @@ Used to compute and evaluate navigation paths in the human brain from a weighted
   - [Visualising Results](#visualising-results)
   - [Full Example](#full-example)
 - [OzStar Training](#ozstar-training)
-  - [OzStar Setup](#ozstar-setup)
   - [OzStar Scripts](#ozstar-scripts)
   - [OzStar Running](#ozstar-running)
   - [Ozstar Downloading Results](#ozstar-downloading-results)
@@ -618,14 +617,6 @@ See [demo_ml.ipynb](https://github.com/Alex-MobileApps/preferred-paths/blob/main
 
 ## OzStar Training
 
-### OzStar Setup
-
-Copy the 'preferred-paths' directory to your OzStar home directory from the command line
-
-```
-scp -r path/to/preferred-paths your-username@ozstar.swin.edu.au:
-```
-
 ### OzStar Scripts
 
 Job scripts need to be created to run training on OzStar.
@@ -657,7 +648,7 @@ For example:
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem-per-cpu=2000
 #SBATCH --partition=skylake
 
@@ -666,10 +657,10 @@ module load pytorch/1.7.1-python-3.8.5
 module load scipy/1.6.0-python-3.8.5
 module load scikit-learn/0.24.2-python-3.8.5
 
-python3 ~/preferred-paths/ozstar_train.py --res 219 --subj 1 --epoch 1000 --sample 100 --hu 10 --lr 0.001 --pathmethod fwd --nolog --savefreq 100 --save ~/preferred-paths/demo.pt --fns anti_streamlines target_node
+python3 /fred/oz192/preferred-paths/ozstar_train.py --res 219 --subj 1 --epoch 1000 --sample 100 --hu 10 --lr 0.001 --pathmethod fwd --nolog --savefreq 100 --save ~/demo.pt --fns anti_streamlines target_node
 ```
 Will create a job named demo_job that will run on the 219 resolution version of brain s001 with criteria functions anti_streamlines and target_node.
-This will terminate after 48 hours or 1000 epochs (whichever comes first) and use 100 FC edge samples per step, 10 hidden units, learning rate of 0.001, fwd path navigation method, does not log ouput during each epoch, and saves to preferred-paths/demo.pt on your OzStar directory every 100 epochs. All other parameters in ozstar_train will have their default values.
+This will terminate after 24 hours or 1000 epochs (whichever comes first) and use 100 FC edge samples per step, 10 hidden units, learning rate of 0.001, fwd path navigation method, does not log ouput during each epoch, and saves to a file demo.pt on your home OzStar directory every 100 epochs. All other parameters in ozstar_train will have their default values.
 
 You can change the job name from demo_job to easily identify it in OzStar during training as well as change the running time from 48 hours if you need more/less time.
 
