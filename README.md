@@ -620,7 +620,7 @@ See [demo_ml.ipynb](https://github.com/Alex-MobileApps/preferred-paths/blob/main
 ### OzStar Scripts
 
 Job scripts need to be created to run training on OzStar.
-These scripts can run the ozstar_train.py file in the preferred-paths directory.
+These scripts can run the ozstar_train.py file in the /fred/oz192/preferred-paths directory.
 
 ozstar_train.py takes the following parameters
 - **res**: Brain resolution size - int, by default 219
@@ -667,7 +667,7 @@ You can change the job name from demo_job to easily identify it in OzStar during
 ### OzStar Running
 
 1. Create a OzStar script as above and save it in a file (e.g. demo.sh)
-2. Copy the script to the preferred-paths folder in your OzStar directory from the command line
+2. Copy the script to your home OzStar directory from the command line
 ```
 scp path/to/demo.sh your-username@ozstar.swin.edu.au:
 ```
@@ -692,8 +692,8 @@ more slurm-27724619.out
 
 If the 'save' parameter is set in the OzStar script, two files will be saved on OzStar.
 E.g. if 'save' was set to 'demo.pt':
-- preferred-paths/demo.pt : Contains the training results
-- preferred-paths/params_demo.pt.txt : Contains the parameters used to produce the results demo.pt
+- demo.pt : Contains the training results
+- params_demo.pt.txt : Contains the parameters used to produce the results demo.pt
 
 Download the results locally
 ```
